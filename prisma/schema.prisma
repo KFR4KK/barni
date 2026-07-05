@@ -1,0 +1,88 @@
+// Phase 2 — Authentication Foundation
+//
+// This schema intentionally contains ONLY what authentication needs.
+// Profile, Comment, Award, Report, Role, etc. (see the architecture
+// blueprint) are added in later phases as new models with relations
+// pointing at User.id — none of them require changing anything below.
+//
+// Account / Session / VerificationToken follow the exact shape required
+// by @auth/prisma-adapter. Do not rename their columns — the adapter
+// reads/writes these field names directly.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// The authenticated identity. Deliberately holds only Discord-derived
+// identity fields for now, not display/profile content — that split is
+// intentional (see the architecture blueprint, Section 3.2: "a `User`
+// existing does not mean a `Profile` exists").
+model User {
+  id          String   @id @default(cuid())
+  discordId   String   @unique
+  username    String
+  displayName String?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  lastLoginAt DateTime @default(now())
+
+  accounts Account[]
+  sessions Session[]
+
+  // Future phases attach here without touching any existing column:
+  // profile   Profile?
+  // comments  Comment[]
+  // roles     UserRole[]
+  // reports   Report[]
+}
+
+// One row per linked OAuth provider account. Only Discord exists today;
+// this shape is what lets a second provider be added later without
+// touching User at all.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Database session strategy (not JWT) — chosen so an admin ban can
+// invalidate a session immediately by deleting this row, rather than
+// waiting for a JWT to expire. See architecture blueprint, Section 4.
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Required by the Prisma adapter's contract even though Discord-only
+// OAuth doesn't use it today (it backs email/passwordless sign-in).
+// Kept so the adapter's full interface is satisfied without workarounds.
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
