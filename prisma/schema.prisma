@@ -29,6 +29,21 @@ model User {
   username    String
   displayName String?
   avatarUrl   String?
+
+  // Not used anywhere in the app today — we deliberately request only the
+  // "identify" Discord scope, never "email". These two columns exist
+  // purely because Auth.js's core AdapterUser type always includes
+  // `email` and `emailVerified` on every createUser/updateUser call,
+  // regardless of provider. The Prisma adapter passes that object
+  // straight into `prisma.user.create/update`, so without matching
+  // columns here it throws "Unknown argument `emailVerified`" — this is
+  // a fixed contract of every Auth.js database adapter, not something
+  // specific to Discord. Leave them nullable and don't populate them;
+  // if email/password or magic-link sign-in is ever added, these are
+  // already the columns Auth.js will use.
+  email         String?   @unique
+  emailVerified DateTime?
+
   createdAt   DateTime @default(now())
   lastLoginAt DateTime @default(now())
 
