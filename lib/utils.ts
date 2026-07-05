@@ -43,3 +43,15 @@ const IMAGE_ICON_PATTERN = /\.(svg|png|jpe?g|webp|gif|avif)$/i;
 export function isImageIcon(icon: string): boolean {
   return IMAGE_ICON_PATTERN.test(icon);
 }
+
+// Phase 3: member avatars used to only ever be local paths under
+// /public/images/members, which next/image optimizes freely. Once avatars
+// are editable (lib/profiles.ts), a member can paste any external image
+// URL — one that almost certainly isn't in next.config.mjs's
+// `images.remotePatterns` allowlist. Rather than expand that allowlist to
+// an arbitrary wildcard (a real security tradeoff) just to support
+// profile editing, callers pass `unoptimized={isExternalUrl(src)}` to
+// next/image so external avatars render as-is instead of erroring.
+export function isExternalUrl(src: string): boolean {
+  return /^https?:\/\//i.test(src);
+}

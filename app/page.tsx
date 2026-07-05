@@ -4,10 +4,18 @@ import { SectionTitle } from "@/components/ui/SectionTitle";
 import { Divider } from "@/components/ui/Divider";
 import { MemberIndex } from "@/components/members/MemberIndex";
 import { getAllMembers } from "@/lib/members";
+import { getAllProfilesBySlug, resolveMemberDisplay } from "@/lib/profiles";
 import { siteConfig } from "@/data/site";
 
-export default function HomePage() {
-  const members = getAllMembers();
+// Server Component (not a client fetch) so an edited displayName/avatar
+// shows up in the index immediately — same reasoning as AuthNav for why
+// this stays async rather than client-side.
+export default async function HomePage() {
+  const staticMembers = getAllMembers();
+  const profilesBySlug = await getAllProfilesBySlug();
+  const members = staticMembers.map((member) =>
+    resolveMemberDisplay(member, profilesBySlug.get(member.slug) ?? null)
+  );
 
   return (
     <>

@@ -50,8 +50,13 @@ model User {
   accounts Account[]
   sessions Session[]
 
+  // Phase 3 — Profile ownership. Optional and unique: a User can exist
+  // without ever claiming a Profile, and can own at most one. The actual
+  // foreign key lives on Profile.userId (see below); this is just the
+  // reverse relation Prisma needs to expose `user.profile`.
+  profile Profile?
+
   // Future phases attach here without touching any existing column:
-  // profile   Profile?
   // comments  Comment[]
   // roles     UserRole[]
   // reports   Report[]
@@ -100,4 +105,88 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Phase 3 — Profile ownership & editing.
+//
+// A `User` existing does not mean a `Profile` exists, and vice versa: every
+// current member starts out as an *unclaimed* Profile (see prisma/seed.ts)
+// with `userId` null, so the member pages keep working for signed-out
+// visitors exactly as before. Signing in with Discord only creates a
+// `User` row — a Profile is claimed separately, on purpose, so identity
+// (who you are to Discord) and public profile content (what the site
+// shows about you) stay decoupled, the same split the User model's own
+// comment already calls out.
+//
+// `slug` is what member pages key off (`/members/[slug]`), independent of
+// whether the profile has been claimed — this is what keeps the existing
+// static routes working unchanged.
+model Profile {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  displayName String
+  realName    String?
+  bio         String   @db.Text
+  avatar      String?
+  banner      String?
+  city        String?
+  country     String?
+
+  // Freeform platform -> URL map (see data/types.ts's `Socials` type,
+  // which this is intended to round-trip through). Left as JSON rather
+  // than one column per platform so adding a platform never requires a
+  // migration.
+  socials Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Null until the profile is claimed; set exactly once, at claim time
+  // (see actions/profile.ts). Not touched by subsequent edits.
+  claimedAt DateTime?
+
+  // Nullable + unique together are what encode "may belong to exactly one
+  // User" and "one User can own only one Profile": nullable allows the
+  // unclaimed state, unique is the DB-level guarantee (backed by an
+  // atomic `updateMany` in the claim action) that two users can never
+  // successfully claim the same profile, and that a claim can never
+  // silently attach a second Profile to a User who already has one.
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // If the linked User is ever deleted, the Profile itself is NOT deleted
+  // (onDelete: SetNull, not Cascade) — it just reverts to unclaimed and
+  // stays visible with whatever content was last saved. Losing a Discord
+  // account shouldn't erase a member's page.
+
+  // Phase 4 — Discord server membership sync (lib/discord.ts,
+  // lib/discord-sync.ts). Deliberately stored on Profile, not User: this
+  // is public-facing display state ("is this member in our server?"),
+  // the same kind of thing as displayName/avatar/bio above, not
+  // authentication state. A Profile with no linked User (unclaimed) has
+  // no Discord identity to check, so these simply stay at their defaults
+  // until the profile is claimed.
+  //
+  // All three "server*"/"discord*" fields are written ONLY by
+  // lib/discord-sync.ts's syncDiscordMembership(), and only from a
+  // successful Discord Bot API response — never from anything the
+  // client sends. If Discord is unreachable, the sync function leaves
+  // whatever was last written here untouched (see its comments) rather
+  // than resetting to "not a member", so a transient Discord outage
+  // never makes a real member look like they left.
+  serverMember   Boolean   @default(false)
+  serverJoinedAt DateTime?
+
+  // Array of Discord role IDs (strings), e.g. ["123456789012345678"].
+  // Not rendered anywhere yet — the requirements are explicit that
+  // role-based UI is a future phase — but captured now so that future
+  // phase can start reading this column on day one instead of needing
+  // another migration.
+  discordRoles Json @default("[]")
+
+  // When the fields above were last successfully written. Lets the UI
+  // (or a future admin view) distinguish "confirmed not a member as of
+  // this timestamp" from "we've never been able to check" — both look
+  // like serverMember: false otherwise.
+  discordSyncedAt DateTime?
 }

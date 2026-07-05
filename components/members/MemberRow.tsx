@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Member } from "@/data/types";
-import { buildProfileURL } from "@/lib/utils";
+import { buildProfileURL, isExternalUrl } from "@/lib/utils";
 
 interface MemberRowProps {
   member: Member;
@@ -28,7 +28,14 @@ export function MemberRow({ member, index }: MemberRowProps) {
 
       <div className="flex shrink-0 items-center gap-4">
         <div className="relative hidden h-14 w-14 overflow-hidden rounded-lg opacity-0 transition-opacity duration-200 group-hover:opacity-100 md:block">
-          <Image src={member.avatar} alt={member.avatarAlt} fill sizes="56px" className="object-cover" />
+          <Image
+            src={member.avatar}
+            alt={member.avatarAlt}
+            fill
+            sizes="56px"
+            className="object-cover"
+            unoptimized={isExternalUrl(member.avatar)}
+          />
         </div>
         <span
           aria-hidden="true"

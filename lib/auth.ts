@@ -3,6 +3,7 @@ import Discord from "next-auth/providers/discord";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import { getDiscordAvatarUrl } from "@/lib/discord";
+import { syncDiscordMembership } from "@/lib/discord-sync";
 
 // This file is the ONLY place that configures how sign-in works. Nothing
 // else in the app should import next-auth directly — pages, components and
@@ -84,6 +85,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         where: { id: user.id },
         data: { lastLoginAt: new Date() },
       });
+
+      // Phase 4 — "synchronize on login" requirement. This does not
+      // change how sign-in works or what it grants: it's a side effect
+      // that runs after the session is already established, writing
+      // only to Profile.serverMember/serverJoinedAt/discordRoles (see
+      // lib/discord-sync.ts). Wrapped so that a Discord outage or a
+      // brand-new user with no Profile yet (see syncDiscordMembership's
+      // "no-profile" case) can never fail — or even delay — login
+      // itself.
+      try {
+        await syncDiscordMembership(user.id);
+      } catch (error) {
+        console.error("[auth] Discord membership sync failed on login:", error);
+      }
     },
   },
 });
