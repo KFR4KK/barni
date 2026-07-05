@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # The Collective — foundation build
 
 This is the production-ready foundation described in the architecture document: fully
@@ -183,4 +184,3 @@ existing component's layout beyond the two new optional slots
 (`MemberHeader`'s `discordBadge` prop, `/profile`'s new badge/refresh block). Comments,
 moderation, and role-based UI/permissions are still out of scope — `discordRoles` is
 captured for a future phase to build on, not used anywhere yet.
-
