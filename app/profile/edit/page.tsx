@@ -5,6 +5,7 @@ import { updateProfileAction } from "@/actions/profile";
 import { Container } from "@/components/ui/Container";
 import { socialLabels, socialOrder } from "@/lib/social-icons";
 import { cn } from "@/lib/utils";
+import { formFieldClasses as fieldClasses, formLabelClasses as labelClasses } from "@/lib/form-styles";
 
 interface ProfileEditPageProps {
   searchParams: Promise<{ error?: string }>;
@@ -13,19 +14,6 @@ interface ProfileEditPageProps {
 const ERROR_MESSAGES: Record<string, string> = {
   "empty-name": "Відображуване ім'я не може бути порожнім.",
 };
-
-// Shared input styling: no input/textarea existed anywhere in the app
-// before this page, so these classes stay close to the existing Button
-// component's border/focus treatment (border-line, brass focus ring)
-// rather than introducing a new visual language.
-const fieldClasses = cn(
-  "w-full rounded-md border border-line bg-charcoal/40 px-4 py-2.5 font-sans text-sm text-bone",
-  "placeholder:text-ash/60",
-  "transition-colors duration-fast focus:border-brass focus:outline-none",
-  "focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
-);
-
-const labelClasses = "font-mono text-xs uppercase tracking-wider text-ash";
 
 // Requires an owned Profile, not just a session — this is Phase 3's real
 // authorization for the route (middleware only checks a cookie, see

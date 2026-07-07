@@ -20,9 +20,17 @@ interface MemberHeaderProps {
    * viewer can click to change; keeps DiscordBadge's own layout (badge +
    * optional link) independent of however many buttons `actions` renders. */
   discordBadge?: ReactNode;
+  /** Phase 5.1 — Follow System: "X Followers · Y Following" + the
+   * Follow/Following button, decided by the page from Follow rows keyed
+   * off the owning Profile's userId. Only present for claimed profiles,
+   * same reasoning as discordBadge above — an unclaimed Profile has no
+   * User to follow. A separate slot rather than folding into `actions`
+   * since it mixes a status display (the counts) with a control (the
+   * button), unlike `actions`, which is buttons only. */
+  followSection?: ReactNode;
 }
 
-export function MemberHeader({ member, location, actions, discordBadge }: MemberHeaderProps) {
+export function MemberHeader({ member, location, actions, discordBadge, followSection }: MemberHeaderProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="relative h-40 w-40 overflow-hidden rounded-2xl md:h-48 md:w-48">
@@ -49,6 +57,7 @@ export function MemberHeader({ member, location, actions, discordBadge }: Member
         <p className="mt-2 font-mono text-xs text-ash">Приєднався {formatDate(member.joinedDate)}</p>
         {location && <p className="mt-1 font-mono text-xs text-ash">{location}</p>}
         {discordBadge && <div className="mt-3">{discordBadge}</div>}
+        {followSection && <div className="mt-3">{followSection}</div>}
       </div>
       {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
     </div>

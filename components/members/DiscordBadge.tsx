@@ -2,6 +2,12 @@ import { getDiscordInviteUrl } from "@/lib/discord";
 
 interface DiscordBadgeProps {
   serverMember: boolean;
+  /** Smaller pill for inline use next to a name (e.g. CommentItem), where
+   * the header-sized badge draws too much attention sitting next to plain
+   * text. Matches the same px-2/py-0.5/text-[10px] proportions as the
+   * "Profile Owner" tag it sits beside there. Header usage (MemberHeader)
+   * doesn't pass this, so it keeps its original larger size. */
+  compact?: boolean;
 }
 
 // Phase 4 — the one place that renders Discord membership status, used
@@ -19,13 +25,19 @@ interface DiscordBadgeProps {
 // this intentionally reaches for Tailwind's built-in `emerald` shade
 // rather than inventing a new brand token for what's really just a
 // status indicator, not a design accent.
-export function DiscordBadge({ serverMember }: DiscordBadgeProps) {
+export function DiscordBadge({ serverMember, compact }: DiscordBadgeProps) {
   const inviteUrl = getDiscordInviteUrl();
 
   return (
     <div className="flex flex-wrap items-center gap-3">
       {serverMember ? (
-        <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider text-emerald-400">
+        <span
+          className={
+            compact
+              ? "inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-emerald-400"
+              : "inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 font-mono text-xs uppercase tracking-wider text-emerald-400"
+          }
+        >
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
           Учасник Discord серверу
         </span>

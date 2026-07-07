@@ -69,3 +69,11 @@ html {
     scroll-behavior: auto !important;
   }
 }
+
+/* Phase 5.2 — backdrop for components/ui/Modal.tsx's native <dialog>.
+   ::backdrop isn't reachable through Tailwind utility classes, so this is
+   the one hand-written rule; the color itself still comes from the same
+   --color-graphite token every other surface in the app uses. */
+dialog::backdrop {
+  background-color: rgb(var(--color-graphite) / 0.75);
+}

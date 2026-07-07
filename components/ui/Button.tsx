@@ -1,11 +1,15 @@
 "use client";
 
-// This is the only client component in the current build. It's marked
-// "use client" because it optionally accepts an onClick handler, which
-// requires an interactive boundary. Nothing in the current pages uses that
-// branch yet (every current Button usage passes `href`), but keeping one
-// component that supports both link and action variants avoids having two
-// near-identical components later (e.g. for a mobile nav toggle).
+// Marked "use client" because it optionally accepts an onClick handler,
+// which requires an interactive boundary. Every current page-level Button
+// usage still passes `href` rather than `onClick` — the onClick branch
+// exists so a link-or-action component doesn't need a near-duplicate
+// sibling later (e.g. a mobile nav toggle).
+//
+// (components/members/FollowButton.tsx is a separate, purpose-built client
+// component rather than a consumer of this onClick branch — it needs its
+// own fetch/optimistic-update state, which doesn't fit this component's
+// plain callback-prop shape. See that file's own comment.)
 
 import Link from "next/link";
 import type { ReactNode } from "react";

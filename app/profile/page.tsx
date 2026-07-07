@@ -7,6 +7,8 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { DiscordBadge } from "@/components/members/DiscordBadge";
 import { RefreshDiscordButton } from "@/components/members/RefreshDiscordButton";
+import { FollowSection } from "@/components/members/FollowSection";
+import { getFollowCounts } from "@/lib/follows";
 
 // Phase 2 shipped this as a deliberate placeholder ("linking a signed-in
 // Discord account to an editable profile is Phase 3's job"). This is that
@@ -35,6 +37,7 @@ export default async function ProfilePage() {
   await syncDiscordMembership(session.user.id);
 
   const profile = await getProfileByUserId(session.user.id);
+  const followCounts = profile ? await getFollowCounts(session.user.id) : null;
   const label = session.user.displayName ?? session.user.username;
 
   return (
@@ -56,11 +59,30 @@ export default async function ProfilePage() {
               <Button href="/profile/edit" variant="outline">
                 Редагувати профіль
               </Button>
+              <Button href="/projects/new" variant="outline">
+                Новий проєкт
+              </Button>
             </div>
 
             <div className="mt-4 flex flex-col items-center gap-3">
               <DiscordBadge serverMember={profile.serverMember} />
               <RefreshDiscordButton />
+              {followCounts && (
+                // Reuses FollowSection rather than a second copy of the
+                // counts/modal wiring — canFollow=false hides the
+                // Follow/Following button (you can't follow yourself;
+                // app/members/[slug]/page.tsx's `canFollow` applies the
+                // same rule via `!isOwner`), but the counts stay
+                // clickable and open the same Phase 5.2 list modals.
+                <FollowSection
+                  targetUserId={session.user.id}
+                  username={session.user.username}
+                  initialIsFollowing={false}
+                  initialFollowersCount={followCounts.followers}
+                  followingCount={followCounts.following}
+                  canFollow={false}
+                />
+              )}
             </div>
           </>
         ) : (
