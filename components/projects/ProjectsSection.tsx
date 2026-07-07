@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/Button";
 import { ProjectCard } from "@/components/projects/ProjectCard";
-import type { ProjectWithAuthor } from "@/lib/projects";
+import type { ProjectListItem } from "@/lib/projects";
 
 interface ProjectsSectionProps {
-  // Phase 6.2 — widened from Project[] to ProjectWithAuthor[] alongside
+  // Phase 6.2 — widened from Project[] to ProjectListItem[] alongside
   // lib/projects.ts's getProjectsByAuthorId, since ProjectCard now needs
-  // the author join for its byline.
-  projects: ProjectWithAuthor[];
+  // the author join for its byline (but not the `images` gallery join —
+  // see ProjectListItem's own comment for why that's a separate,
+  // narrower type from ProjectWithAuthor).
+  projects: ProjectListItem[];
   /** Whether the signed-in visitor owns this profile. Controls the "New
    * Project" button — the projects array itself is already filtered by
    * the caller (app/members/[slug]/page.tsx only asks lib/projects.ts

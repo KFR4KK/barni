@@ -158,7 +158,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ s
   // coverImage is an external URL are left alone, same as everywhere
   // else isOwnStorageUrl is used.
   const urlsToClean = [deleted.coverImage, ...deleted.images.map((image) => image.imageUrl)].filter(
-    (url): url is string => Boolean(url) && isOwnStorageUrl(url)
+    (url): url is string => url !== null && isOwnStorageUrl(url)
   );
 
   for (const url of urlsToClean) {

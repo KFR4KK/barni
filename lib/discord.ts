@@ -11,7 +11,11 @@
 export function getDiscordAvatarUrl(discordId: string, avatarHash: string | null | undefined): string {
   if (!avatarHash) {
     // Discord assigns one of 6 default avatars based on the account id.
-    const defaultIndex = Number((BigInt(discordId) >> 22n) % 6n);
+    // BigInt(...) calls, not `22n`/`6n` literals: this project's
+    // tsconfig targets ES2017, and BigInt literal syntax requires
+    // ES2020+ — the constructor form produces the same bigint value
+    // without needing a broader compile target for one line.
+    const defaultIndex = Number((BigInt(discordId) >> BigInt(22)) % BigInt(6));
     return `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png`;
   }
 

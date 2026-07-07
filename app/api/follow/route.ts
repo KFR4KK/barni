@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { createNotification } from "@/lib/notifications";
 
 // Phase 5.1 — Follow System.
 //
@@ -56,6 +57,16 @@ export async function POST(request: Request) {
   try {
     await prisma.follow.create({
       data: { followerId: session.user.id, followingId: targetUserId },
+    });
+    // Only reached on an actual new row — the catch below handles the
+    // already-following case, which must NOT notify again (the brief's
+    // "Phase 7.4" is about the follow *event*, and a duplicate/idempotent
+    // request isn't a new event). createNotification itself also guards
+    // against a self-follow, but that path is already rejected above.
+    await createNotification({
+      recipientId: targetUserId,
+      actorId: session.user.id,
+      type: "FOLLOW",
     });
   } catch (error) {
     // P2002 = unique constraint violation, i.e. already following. The

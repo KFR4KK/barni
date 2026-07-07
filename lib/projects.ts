@@ -35,6 +35,16 @@ export function getProjectWithAuthor(slug: string): Promise<ProjectWithAuthor | 
   });
 }
 
+// Phase 6.2 — the shape getProjectsByAuthorId below actually returns:
+// the author byline join, but deliberately no `images` (unlike
+// ProjectWithAuthor) — its only caller, ProjectCard, never renders the
+// gallery, only the cover image already on Project itself, so there's
+// no reason for every row in an author's project list to carry a second
+// join nothing reads.
+export type ProjectListItem = Project & {
+  author: { username: string; displayName: string | null };
+};
+
 // Lists one author's projects, most recent first. `includePrivate`
 // defaults to false — the profile page (app/members/[slug]/page.tsx)
 // only passes `true` when the viewer is the profile's own owner, so a
@@ -51,7 +61,7 @@ export function getProjectWithAuthor(slug: string): Promise<ProjectWithAuthor | 
 export function getProjectsByAuthorId(
   authorId: string,
   options: { includePrivate?: boolean } = {}
-): Promise<ProjectWithAuthor[]> {
+): Promise<ProjectListItem[]> {
   return prisma.project.findMany({
     where: {
       authorId,

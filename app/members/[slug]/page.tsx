@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { Section } from "@/components/ui/Section";
 import { ProfileLayout } from "@/components/members/ProfileLayout";
@@ -100,12 +101,12 @@ export default async function MemberPage({ params, searchParams }: MemberPagePro
     <Section className="relative isolate overflow-hidden">
       <AmbientBackground member={displayMember} />
       <Container wide>
-        <a
+        <Link
           href="/"
           className="mb-12 inline-block font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-150 hover:text-bone focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
         >
           ← Індекс
-        </a>
+        </Link>
         <ProfileLayout
           header={
             <MemberHeader

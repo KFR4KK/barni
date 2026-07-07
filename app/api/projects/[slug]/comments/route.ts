@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getProjectBySlug } from "@/lib/projects";
 import { getUserDisplayById } from "@/lib/follows";
-import { createProjectComment, getProjectComments, MAX_COMMENT_LENGTH } from "@/lib/project-comments";
+import {
+  createProjectComment,
+  getProjectCommentById,
+  getProjectComments,
+  MAX_COMMENT_LENGTH,
+} from "@/lib/project-comments";
+import { createNotification } from "@/lib/notifications";
 
 // Phase 8.1 — Project Comments.
 //
@@ -82,6 +88,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   const created = await createProjectComment(project.id, session.user.id, input);
   if (!created) {
     return NextResponse.json({ error: "invalid-parent" }, { status: 400 });
+  }
+
+  // Same split as app/api/users/[username]/profile-comments/route.ts: a
+  // reply notifies the parent comment's author, a top-level comment
+  // notifies the project's author. createNotification skips the
+  // self-notification case (e.g. the project author commenting on their
+  // own project).
+  if (created.parentId) {
+    const parent = await getProjectCommentById(created.parentId);
+    if (parent) {
+      await createNotification({
+        recipientId: parent.authorId,
+        actorId: session.user.id,
+        type: "COMMENT_REPLY",
+        entityId: created.id,
+      });
+    }
+  } else {
+    await createNotification({
+      recipientId: project.authorId,
+      actorId: session.user.id,
+      type: "PROJECT_COMMENT",
+      entityId: created.id,
+    });
   }
 
   // Same reasoning as the profile-comments POST route: the client needs

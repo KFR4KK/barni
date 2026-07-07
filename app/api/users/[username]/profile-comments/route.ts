@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getUserByUsername, getUserDisplayById } from "@/lib/follows";
-import { createProfileComment, getProfileComments, MAX_COMMENT_LENGTH } from "@/lib/profile-comments";
+import {
+  createProfileComment,
+  getProfileCommentById,
+  getProfileComments,
+  MAX_COMMENT_LENGTH,
+} from "@/lib/profile-comments";
+import { createNotification } from "@/lib/notifications";
 
 // Phase 7.1 — Profile Comments.
 //
@@ -71,6 +77,31 @@ export async function POST(request: Request, { params }: { params: Promise<{ use
   const created = await createProfileComment(user.id, session.user.id, input);
   if (!created) {
     return NextResponse.json({ error: "invalid-parent" }, { status: 400 });
+  }
+
+  // A reply notifies the parent comment's author, not the profile
+  // owner (they may be different people — anyone can reply to anyone
+  // else's top-level comment on this profile); a top-level comment
+  // notifies the profile owner. createNotification itself skips the
+  // self-notification case either way (e.g. the profile owner replying
+  // to their own comment, or commenting on their own profile).
+  if (created.parentId) {
+    const parent = await getProfileCommentById(created.parentId);
+    if (parent) {
+      await createNotification({
+        recipientId: parent.authorId,
+        actorId: session.user.id,
+        type: "COMMENT_REPLY",
+        entityId: created.id,
+      });
+    }
+  } else {
+    await createNotification({
+      recipientId: user.id,
+      actorId: session.user.id,
+      type: "PROFILE_COMMENT",
+      entityId: created.id,
+    });
   }
 
   // The client needs the new comment's author display (avatar, name,

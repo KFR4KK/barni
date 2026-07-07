@@ -95,6 +95,17 @@ model User {
   // why there's no second, named relation to disambiguate against.
   projectLikes ProjectLike[]
 
+  // Phase 7.4 — Notifications Foundation. Two reverse relations onto the
+  // same Notification model, split by which foreign key they read — same
+  // "Following"/"Followers" split as Follow above, for the same reason:
+  // `notifications` is "things that happened to me", `actedNotifications`
+  // is "notifications I caused by acting on something of someone else's".
+  // Both User <-> User at the schema level even though the thing acted on
+  // is often a Project or a comment — see Notification's own comment for
+  // why `entityId` (not a second relation here) is what points at that.
+  notifications      Notification[] @relation("NotificationsReceived")
+  actedNotifications Notification[] @relation("NotificationsActed")
+
   // Future phases attach here without touching any existing column:
   // roles     UserRole[]
   // reports   Report[]
@@ -553,4 +564,80 @@ model ProjectLike {
   // today, but cheap insurance for the cascade delete and any future
   // "projects I've liked" view.
   @@index([userId])
+}
+
+// Phase 7.4 — Notifications Foundation.
+//
+// One table for every kind of notification, discriminated by `type`,
+// rather than one table per source feature (FollowNotification,
+// CommentNotification, ...). This is the one place in the schema that
+// *does* take the polymorphic shape ProfileComment/ProjectComment's own
+// comments explicitly warn against for comments — justified here because
+// a notification's own content is identical regardless of source (who
+// caused it, what kind of thing happened, when, has it been seen), so
+// there's nothing concrete to duplicate per source the way a Comment's
+// content/author/replies shape would be. What a notification points at
+// (a Project, a ProfileComment, a ProjectComment, or nothing at all for
+// FOLLOW) genuinely differs per `type`, which is exactly what `entityId`
+// exists to carry.
+//
+// `entityId` is deliberately a plain nullable String, not a Prisma
+// relation — it can't be one: depending on `type` it names a row in
+// three different tables (or no row at all, for FOLLOW), and Prisma
+// relations are always to exactly one target model. Resolving it back to
+// something renderable (a link + a display string) happens entirely in
+// lib/notifications.ts, keyed off `type` — the one place that knows
+// "PROJECT_LIKE's entityId is a Project.id" etc. Adding a new
+// NotificationType later means adding one creation call at the source
+// and one branch in that resolver, never a schema change.
+enum NotificationType {
+  FOLLOW
+  PROFILE_COMMENT
+  PROJECT_COMMENT
+  COMMENT_REPLY
+  PROJECT_LIKE
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+
+  // Whether the recipient has opened/seen this notification — see
+  // lib/notifications.ts's markAsRead/markAllAsRead. No `readAt`
+  // timestamp: nothing in this phase's brief needs "when was it read",
+  // only "has it been read", so that's the one column that exists.
+  read Boolean @default(false)
+
+  type NotificationType
+
+  // See the model comment above for why this is untyped rather than a
+  // relation. Null for types that don't need one (FOLLOW: the actor
+  // themselves *is* the whole notification, nothing further to point
+  // at).
+  entityId String?
+
+  // Who this notification is *for*. Cascade: if the recipient's account
+  // is deleted, there's no one left to show it to — same reasoning as
+  // every other User-owned row in this schema (Follow, ProjectLike, the
+  // Comment models).
+  recipientId String
+  recipient   User   @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  // Who caused this notification (followed, commented, liked, replied).
+  // Cascade here too: a notification attributed to an account that no
+  // longer exists isn't useful to keep around, and every other
+  // "who performed this action" FK in this schema (ProjectComment.authorId,
+  // ProjectLike.userId, Follow.followerId) cascades the same way.
+  actorId String
+  actor   User   @relation("NotificationsActed", fields: [actorId], references: [id], onDelete: Cascade)
+
+  // Powers the two real read patterns: "list my notifications, newest
+  // first" (recipientId + orderBy createdAt) and "how many are unread"
+  // (recipientId + read = false, a prefix of this same index). No
+  // separate index needed for the count query.
+  @@index([recipientId, createdAt])
+  // FK-column index, same convention as every other model in this
+  // schema (see ProjectLike.userId above).
+  @@index([actorId])
 }

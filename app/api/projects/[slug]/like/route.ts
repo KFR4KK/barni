@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getProjectBySlug } from "@/lib/projects";
 import { toggleLike } from "@/lib/project-likes";
+import { createNotification } from "@/lib/notifications";
 
 // Phase 7.3 — Project Likes.
 //
@@ -34,5 +35,19 @@ export async function POST(_request: Request, { params }: { params: Promise<{ sl
   }
 
   const result = await toggleLike(project.id, session.user.id);
+
+  // Per the brief: "При снятии лайка ничего делать не нужно" — only the
+  // liked=true branch (this toggle just turned the like on) notifies.
+  // createNotification itself skips the self-like case (liking your own
+  // project).
+  if (result.liked) {
+    await createNotification({
+      recipientId: project.authorId,
+      actorId: session.user.id,
+      type: "PROJECT_LIKE",
+      entityId: project.id,
+    });
+  }
+
   return NextResponse.json(result);
 }
