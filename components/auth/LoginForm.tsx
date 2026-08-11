@@ -4,7 +4,6 @@ import { useActionState, useState } from "react";
 import { MessageCircle, Chrome } from "lucide-react";
 import { signInWithDiscord, signInWithGoogle } from "@/actions/auth";
 import { registerWithPassword, signInWithPassword, type CredentialsActionResult } from "@/actions/auth-credentials";
-import { TelegramLoginWidget } from "@/components/auth/TelegramLoginWidget";
 import { cn } from "@/lib/utils";
 
 const initialState: CredentialsActionResult = {};
@@ -49,7 +48,8 @@ export function LoginForm() {
             Continue with Google
           </button>
         </form>
-        <TelegramLoginWidget />
+        {/* Telegram temporarily disabled — see components/auth/TelegramLoginWidget.tsx,
+           still there and working, just not rendered here right now. */}
       </div>
 
       <div className="flex items-center gap-3">
