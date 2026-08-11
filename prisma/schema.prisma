@@ -1,0 +1,999 @@
+// Phase 2 — Authentication Foundation
+//
+// This schema intentionally contains ONLY what authentication needs.
+// Profile, Comment, Award, Report, Role, etc. (see the architecture
+// blueprint) are added in later phases as new models with relations
+// pointing at User.id — none of them require changing anything below.
+//
+// Account / Session / VerificationToken follow the exact shape required
+// by @auth/prisma-adapter. Do not rename their columns — the adapter
+// reads/writes these field names directly.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// The authenticated identity. Originally Discord-only; now a User can be
+// reached through any mix of a password, an OAuth Account row (Discord,
+// Google, Telegram once added), or both — that split from display/profile
+// content is still intentional (see the architecture blueprint, Section
+// 3.2: "a `User` existing does not mean a `Profile` exists").
+//
+// Multi-provider auth / Account Linking. `discordId` is now optional — a
+// User is no longer guaranteed to have signed in with Discord. `username`
+// is now the one canonical, unique, user-CHOSEN BARNI identifier every
+// account has exactly one of, no matter how many providers are linked to
+// it — it is never auto-imported from Discord, Google, or Telegram (see
+// actions/onboarding.ts). It's nullable only for the brief window between
+// account creation and that onboarding step; app/welcome/page.tsx's gate
+// never lets an authenticated user reach the rest of the app with a null
+// username. This also replaces the old Profile.slug as the source of
+// every /members/[slug] URL — see lib/profiles.ts's getProfileByUsername.
+model User {
+  id          String   @id @default(cuid())
+  discordId   String?  @unique
+  username    String?  @unique
+  displayName String?
+  avatarUrl   String?
+
+  // Email + password sign-in. Null for any account that has never set a
+  // password (OAuth-only accounts). See lib/password.ts — scrypt via
+  // Node's built-in `crypto`, deliberately not a new dependency — for how
+  // this is produced/verified, and lib/auth.ts's Credentials provider for
+  // where it's checked.
+  passwordHash String?
+
+  // Was already here purely to satisfy the Adapter's AdapterUser contract
+  // (see the original comment this replaces, still true for Discord/
+  // Telegram which don't supply an email) — now also actually populated
+  // for Email and Google sign-ins.
+  email         String?   @unique
+  emailVerified DateTime?
+
+  createdAt   DateTime @default(now())
+  lastLoginAt DateTime @default(now())
+
+  // Phase 9.5 — Profile Auto-Provisioning & Welcome Page. True once this
+  // user has been shown the one-time Welcome page that now follows every
+  // sign-in's OAuth redirect (see actions/auth.ts's `redirectTo` and
+  // app/welcome/page.tsx). Starts false at row creation; app/welcome's
+  // own page flips it to true the first time it actually renders the
+  // greeting for this user, so every sign-in after that lands there only
+  // to be immediately redirected on to /feed instead.
+  hasSeenWelcome Boolean @default(false)
+
+  accounts Account[]
+  sessions Session[]
+
+  // Phase 3 — Profile ownership. Optional and unique: a User can exist
+  // without ever claiming a Profile, and can own at most one. The actual
+  // foreign key lives on Profile.userId (see below); this is just the
+  // reverse relation Prisma needs to expose `user.profile`.
+  profile Profile?
+
+  // Phase 5.1 — Follow System. Both are reverse relations onto the same
+  // Follow model below, split by which foreign key they read: `following`
+  // is "rows where I'm the one who clicked Follow", `followers` is "rows
+  // where someone else followed me". Deliberately User <-> User, not
+  // Profile <-> Profile: following is something any signed-in account can
+  // do or receive, independent of whether that account has claimed a
+  // Profile page (see lib/follows.ts and app/api/follow/route.ts).
+  following Follow[] @relation("Following")
+  followers Follow[] @relation("Followers")
+
+  // Phase 6.1 — Projects Foundation. A User authors zero or more
+  // Projects directly (not via Profile — see the Project model's own
+  // comment for why), so this is a plain one-to-many reverse relation,
+  // same shape as `accounts`/`sessions` above.
+  projects Project[]
+
+  // Phase 7.1 — Profile Comments. Two reverse relations onto the same
+  // ProfileComment model, split by which foreign key they read — same
+  // "Following"/"Followers" split as Follow above, for the same reason:
+  // `authoredProfileComments` is "comments I wrote", `receivedProfileComments`
+  // is "comments left on my profile". Both are User <-> User, not
+  // Profile <-> Profile — see ProfileComment's own comment for why.
+  authoredProfileComments ProfileComment[] @relation("ProfileCommentsAuthored")
+  receivedProfileComments ProfileComment[] @relation("ProfileCommentsReceived")
+
+  // Phase 8.1 — Project Comments. A plain reverse relation, not a named
+  // one like the Profile Comments pair above: ProjectComment has only a
+  // single relation to User (its author) — the "who can moderate" side
+  // is derived through ProjectComment.project.authorId instead of a
+  // second direct FK to User (see ProjectComment's own comment for why),
+  // so there's no second relation here to disambiguate against.
+  projectComments ProjectComment[]
+
+  // Phase 8.1 — Post Comments. Same reasoning as `projectComments`
+  // above — PostComment's "who can moderate" side is derived through
+  // PostComment.post.userId, not a second direct FK to User.
+  postComments PostComment[]
+
+  // Phase 7.3 — Project Likes. Plain reverse relation, same shape as
+  // `projectComments` above — ProjectLike has only a single direct FK to
+  // User (the liker), same reasoning as ProjectComment's own comment for
+  // why there's no second, named relation to disambiguate against.
+  projectLikes ProjectLike[]
+
+  // Phase 7.4 — Notifications Foundation. Two reverse relations onto the
+  // same Notification model, split by which foreign key they read — same
+  // "Following"/"Followers" split as Follow above, for the same reason:
+  // `notifications` is "things that happened to me", `actedNotifications`
+  // is "notifications I caused by acting on something of someone else's".
+  // Both User <-> User at the schema level even though the thing acted on
+  // is often a Project or a comment — see Notification's own comment for
+  // why `entityId` (not a second relation here) is what points at that.
+  notifications      Notification[] @relation("NotificationsReceived")
+  actedNotifications Notification[] @relation("NotificationsActed")
+
+  // Phase 8.0 — Posts Foundation. Plain reverse relation, same shape as
+  // `projectComments`/`projectLikes` above — Post has only a single
+  // direct FK to User (the author), same reasoning as those models'
+  // comments for why there's no second, named relation to disambiguate
+  // against.
+  posts Post[]
+
+  // Phase 12, point 11 — Comment Likes. Plain reverse relation, same
+  // shape as `projectLikes` above.
+  profileCommentLikes ProfileCommentLike[]
+
+  // Future phases attach here without touching any existing column:
+  // roles     UserRole[]
+  // reports   Report[]
+}
+
+// One row per linked OAuth provider account. Started Discord-only; this
+// shape is exactly what lets Google/Telegram be added later purely as new
+// provider config (see lib/auth.ts), without touching User or this model
+// at all. `@@unique([provider, providerAccountId])` is also what makes
+// "this Google/Telegram account is already linked to someone else"
+// (point 12.11 of the Account Linking brief) a DB-level guarantee rather
+// than an app-level check that could race.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  // Account Linking, point 9 — "Connected ≠ Public". Whether this
+  // specific linked provider (Discord, Telegram, ...) is shown on the
+  // user's public profile. Defaults to off: linking a provider is never
+  // itself a decision to publish it. Per-provider (not a single flag on
+  // User) because a user may want Discord public but Telegram private,
+  // or vice versa.
+  showOnProfile Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Database session strategy (not JWT) — chosen so an admin ban can
+// invalidate a session immediately by deleting this row, rather than
+// waiting for a JWT to expire. See architecture blueprint, Section 4.
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Required by the Prisma adapter's contract even though Discord-only
+// OAuth doesn't use it today (it backs email/passwordless sign-in).
+// Kept so the adapter's full interface is satisfied without workarounds.
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Phase 3 — Profile ownership & editing.
+//
+// Phase 9.5 — Profile Auto-Provisioning, superseded by the Account Linking
+// phase's comment below for the "userId nullable" reasoning — kept for
+// history, not re-stated.
+//
+// Account Linking — Profile no longer has its own `slug`. A Profile is a
+// strict 1:1 extension of a User (via `userId`, still nullable/unique for
+// the same two reasons as before: legacy data/members.ts fixtures never
+// claimed by a real sign-in, and `onDelete: SetNull` below reverting a
+// deleted User's Profile to that same "no linked User" shape rather than
+// deleting the page). Every /members/[username] URL now resolves through
+// User.username — see lib/profiles.ts's getProfileByUsername — not
+// through this model directly.
+model Profile {
+  id          String   @id @default(cuid())
+  displayName String
+  realName    String?
+  bio         String   @db.Text
+  avatar      String?
+  banner      String?
+  city        String?
+  country     String?
+
+  // Freeform platform -> URL map (see data/types.ts's `Socials` type,
+  // which this is intended to round-trip through). Left as JSON rather
+  // than one column per platform so adding a platform never requires a
+  // migration.
+  socials Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Phase 12 — Profile Redesign.
+  //
+  // Banner now supports three media kinds (static image, GIF, or a
+  // short muted looping video), not just an image URL — `banner` alone
+  // can no longer say which one it is, so `bannerType` is stored
+  // alongside it rather than sniffed from the URL/extension at render
+  // time (a signed Storage URL or a pasted external link doesn't
+  // reliably carry a real file extension). Defaults to IMAGE so every
+  // existing row (all of which are plain image URLs from before this
+  // phase) renders exactly as before without a data migration.
+  bannerType MediaType @default(IMAGE)
+
+  // Structured skills, replacing the old design-only `Member.skills`
+  // (data/types.ts) for any profile actually backed by this table — see
+  // that field's own comment for why it could never be user-edited
+  // before. Postgres text[] rather than a side table: skills have no
+  // attributes of their own (no icon/color/order beyond array order),
+  // so a join table would only add a foreign key with nothing else to
+  // hang off it. `@default([])` so every pre-existing row (nobody has
+  // ever set this) reads as "no skills" rather than null-handling
+  // everywhere that reads it.
+  skills String[] @default([])
+
+  // Freeform, single line ("Жилінський університет" in the mockup) —
+  // deliberately not a structured {school, degree, years} shape yet;
+  // nothing in the brief asks for that, and a string is trivially
+  // upgradeable to a JSON/side-table shape later without touching every
+  // profile that already filled this in, the same "start simple, widen
+  // later" call `bio`/`realName` already made.
+  education String?
+
+  // Phase 12, point 4/5 — Birthday. Date of birth, not age: age is
+  // *always* derived from this at render time (see
+  // lib/utils.ts's calculateAge) and is never itself written to a
+  // column, so a profile's displayed age auto-advances every year with
+  // zero maintenance and no "someone's age is a year stale" bug class.
+  // Only the calendar month+day are used for the point-5 birthday-badge
+  // foundation (today == birthday's month/day) — full DateTime (not a
+  // separate month/day pair) so a future "upcoming birthdays" or
+  // "member since / age" feature has the real date to work with, not a
+  // recurring-event shape that's thrown the year away.
+  birthday DateTime?
+
+  // Phase 12, point 6 — Favorite Music. A single uploaded local audio
+  // file (mp3/wav/ogg — see lib/storage.ts's uploadAudio), never a
+  // Spotify/YouTube/streaming link, per the brief. All three columns are
+  // null together (no track set) or set together (musicUrl always
+  // implies a title); artist alone is optional, matching the mini
+  // player's own "artist name (optional)" requirement.
+  musicUrl    String?
+  musicTitle  String?
+  musicArtist String?
+
+  // Phase 12, point 10 — Custom Media Widget. The one optional large
+  // block below the Group card in the right sidebar; same three media
+  // kinds as the banner (hence reusing MediaType rather than a
+  // widget-specific enum). Null `widgetMedia` is exactly "disabled" —
+  // no separate boolean flag, so there's no way for the two to
+  // disagree — the layout collapses whenever this is null, per the
+  // brief's point 10.
+  widgetMedia     String?
+  widgetMediaType MediaType?
+
+  // Phase 12, point 9 — Right Sidebar Widgets. Which *optional* widgets
+  // (beyond the always-shown Group card and the custom media block
+  // above) this profile has turned on, e.g. ["quote", "mini-bio",
+  // "favorite-game", "current-status"] — see lib/profile-widgets.ts for
+  // the source-of-truth list of valid ids, the same "add a new entry to
+  // one array, no migration" idiom lib/tags.ts's BUILT_IN_TAGS already
+  // uses. Each enabled widget's own content (the quote text, the status
+  // text, ...) lives in `widgetContent` below, keyed by the same id, so
+  // adding a brand-new widget type is: one new id in that list, one new
+  // case in the widget renderer, and (if it needs input) one new key
+  // read out of this same JSON blob — never a new column, never a
+  // migration.
+  enabledWidgets Json @default("[]")
+  widgetContent  Json @default("{}")
+
+  // Null until the profile is claimed; set exactly once, at claim time
+  // (see actions/profile.ts). Not touched by subsequent edits.
+  claimedAt DateTime?
+
+  // Nullable + unique together are what encode "may belong to exactly one
+  // User" and "one User can own only one Profile": nullable allows the
+  // unclaimed state, unique is the DB-level guarantee (backed by an
+  // atomic `updateMany` in the claim action) that two users can never
+  // successfully claim the same profile, and that a claim can never
+  // silently attach a second Profile to a User who already has one.
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // If the linked User is ever deleted, the Profile itself is NOT deleted
+  // (onDelete: SetNull, not Cascade) — it just reverts to unclaimed and
+  // stays visible with whatever content was last saved. Losing a Discord
+  // account shouldn't erase a member's page.
+
+  // Phase 4 — Discord server membership sync (lib/discord.ts,
+  // lib/discord-sync.ts). Deliberately stored on Profile, not User: this
+  // is public-facing display state ("is this member in our server?"),
+  // the same kind of thing as displayName/avatar/bio above, not
+  // authentication state. A Profile with no linked User (unclaimed) has
+  // no Discord identity to check, so these simply stay at their defaults
+  // until the profile is claimed.
+  //
+  // All three "server*"/"discord*" fields are written ONLY by
+  // lib/discord-sync.ts's syncDiscordMembership(), and only from a
+  // successful Discord Bot API response — never from anything the
+  // client sends. If Discord is unreachable, the sync function leaves
+  // whatever was last written here untouched (see its comments) rather
+  // than resetting to "not a member", so a transient Discord outage
+  // never makes a real member look like they left.
+  serverMember   Boolean   @default(false)
+  serverJoinedAt DateTime?
+
+  // Array of Discord role IDs (strings), e.g. ["123456789012345678"].
+  // Not rendered anywhere yet — the requirements are explicit that
+  // role-based UI is a future phase — but captured now so that future
+  // phase can start reading this column on day one instead of needing
+  // another migration.
+  discordRoles Json @default("[]")
+
+  // When the fields above were last successfully written. Lets the UI
+  // (or a future admin view) distinguish "confirmed not a member as of
+  // this timestamp" from "we've never been able to check" — both look
+  // like serverMember: false otherwise.
+  discordSyncedAt DateTime?
+}
+
+// Phase 5.1 — Follow System.
+//
+// Deliberately User <-> User, not Profile <-> Profile, even though the
+// Follow button lives on `/members/[slug]` (a Profile page): the action
+// ("I follow you") is something a signed-in account performs and
+// receives, which is exactly what User already models, and it means any
+// signed-in visitor can follow someone regardless of whether the
+// follower has claimed a Profile of their own. The tradeoff is that an
+// *unclaimed* Profile (no linked User — see Profile.userId above) has no
+// User to be followed, so it shows no follow UI at all; see
+// app/members/[slug]/page.tsx, which only renders the Follow section
+// when `profile.userId` is set. This is the same tradeoff already made
+// for the Discord badge in Phase 4, for the same reason.
+model Follow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  followerId String
+  follower   User   @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+
+  followingId String
+  following   User   @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // The DB-level guarantee that "can't follow the same person twice" —
+  // app/api/follow/route.ts's POST handler still checks for this
+  // violation (Prisma error code P2002) and treats it as a successful,
+  // idempotent no-op rather than an error, since the client's desired end
+  // state ("I am following them") is already true either way.
+  //
+  // As a compound index, this also covers "all rows where I'm the
+  // follower" (followerId is the leftmost column) — the separate index
+  // below is only needed for the reverse direction.
+  @@unique([followerId, followingId])
+  // Powers "how many followers does this user have" (Follow.count where
+  // followingId = X) — the query the profile page and the follow/unfollow
+  // API responses both run on every request.
+  @@index([followingId])
+}
+
+// Phase 6.1 — Projects Foundation.
+//
+// The first content model that isn't identity or social-graph state
+// (User/Account/Session/VerificationToken, Profile, Follow) — it's the
+// foundation the brief names likes, comments, collections, notifications,
+// and the activity feed will all eventually attach to. Only the fields
+// those future phases can't get off the ground without are here now.
+//
+// Deliberately keyed to `User.id`, not `Profile.id` — same reasoning as
+// `Follow` (see that model's comment): authoring a project is something
+// any signed-in account can do, independent of whether that account has
+// claimed a member Profile page. A project's "Author" byline
+// (app/projects/[slug]/page.tsx) prefers the author's Profile
+// displayName/avatar/slug when one exists and falls back to the bare
+// Discord username otherwise — the same fallback lib/follows.ts's
+// `FollowListEntry` already uses.
+// Phase 12 — Profile Redesign. Shared by Profile.bannerType and
+// Profile.widgetMediaType — both the banner and the optional custom
+// widget block support exactly these three kinds of media, per the
+// brief ("static image, animated GIF, short muted looping video"). A
+// real enum (not a free string) so an invalid value is a migration-
+// time/type error, not a silent "renders nothing" at runtime. Doesn't
+// include AUDIO: the favorite-track upload (Profile.musicUrl) never
+// needs a stored kind — mp3/wav/ogg all just play via the same <audio>
+// tag, so there's nothing for a type column to disambiguate.
+enum MediaType {
+  IMAGE
+  GIF
+  VIDEO
+}
+
+enum ProjectVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model Project {
+  id          String            @id @default(cuid())
+  title       String
+  slug        String            @unique
+  description String            @db.Text
+  coverImage  String?
+  visibility  ProjectVisibility @default(PUBLIC)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  // Phase 6.2 — Project Showcase. All three optional, additive to Phase
+  // 6.1's shape — no existing column is touched. `shortDescription` is
+  // capped at 200 chars at the application layer (see
+  // app/api/projects/route.ts and app/api/projects/[slug]/route.ts), same
+  // "app enforces, DB just stores" split already used for `title`
+  // (100 chars) and `description` (4000 chars) — kept as a plain
+  // (unbounded) column rather than `@db.VarChar(200)` so a future length
+  // change never needs a migration, only a constant.
+  shortDescription String?
+  githubUrl        String?
+  externalUrl      String?
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Phase 6.3 — Project Gallery. Separate model, not an array column on
+  // Project (per the brief: "Не хранить массив URL внутри Project") —
+  // same reasoning as Follow/Project themselves being their own tables
+  // rather than JSON blobs: each image needs its own id to delete
+  // individually and its own Storage path to clean up. Deliberately
+  // Cascade, matching Project's own onDelete: Cascade above — gallery
+  // images are content of the project, not identity-adjacent state, so
+  // they should never outlive it.
+  images ProjectImage[]
+
+  // Phase 8.1 — Project Comments. Same relationship shape as `images`
+  // above: one Project has many ProjectComment rows, Cascade so deleting
+  // a project takes its comment thread with it — see ProjectComment's
+  // own comment for the full reasoning.
+  comments ProjectComment[]
+
+  // Phase 7.3 — Project Likes. Same relationship shape as `comments`/
+  // `images` above: one Project has many ProjectLike rows, Cascade so
+  // deleting a project takes its likes with it — count is always derived
+  // via `prisma.projectLike.count({ where: { projectId } })`
+  // (lib/project-likes.ts), never stored as a column on Project itself.
+  likes ProjectLike[]
+
+  // Deliberately Cascade, unlike Profile's onDelete: SetNull — a Profile
+  // is identity-adjacent public content meant to survive its owning User
+  // being removed (see that model's comment), but a Project is content
+  // the User authored: if the account goes, so does what it published.
+  // Revisit this if a later phase needs projects to survive account
+  // deletion (e.g. transferring ownership to a "deleted user" sentinel).
+
+  // Phase 10 — Tags. One Project has many ProjectTag join rows (both
+  // built-in and per-project custom tags — see the Tag model's own
+  // comment for why this is a real entity and not a string[] column).
+  // Cascade, same reasoning as `comments`/`images`/`likes` above: tag
+  // assignments are content of the project, not identity-adjacent state.
+  tags ProjectTag[]
+
+  // Powers "list this author's projects" (the profile page's Projects
+  // block, app/members/[slug]/page.tsx) — every read of this model
+  // filters by authorId first.
+  @@index([authorId])
+}
+
+// Phase 6.3 — Project Gallery.
+//
+// Additional content attached to a Project, separate from its single
+// `coverImage` (which stays a plain column on Project — see that model's
+// own comment). One row per uploaded image, so each can be deleted
+// individually (both the DB row and its Storage object — see
+// app/api/projects/[slug]/images/[imageId]/route.ts) without touching
+// the rest of the gallery.
+//
+// `alt` exists on the model (per this phase's brief) but this phase
+// deliberately never exposes a caption UI to set it ("не делать:
+// подписи к изображениям" is explicitly out of scope) — it's left null
+// today so a future accessibility/captioning pass can start writing to
+// an already-migrated column instead of needing another migration.
+//
+// `order` is a plain Int, defaulting to insertion order (see
+// lib/projects.ts's addProjectImage) — per the brief, drag-and-drop
+// reordering is explicitly out of scope this phase, so nothing writes a
+// non-default value to it yet, but the column exists so that future
+// phase doesn't need a migration either.
+model ProjectImage {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  alt       String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Powers "list this project's gallery, in order" — the project detail
+  // page's and the edit page's only read pattern for this model.
+  @@index([projectId])
+}
+
+// Phase 7.1 — Profile Comments.
+//
+// Deliberately its own model (`ProfileComment`), not a polymorphic
+// `Comment` with a `targetType`/`targetId` pair that Project Comments
+// (the next phase, per the brief) would also plug into. A polymorphic
+// table is exactly the "universal comments engine" the brief explicitly
+// warns against building ahead of need — there's no second comment
+// target yet, so there's nothing concrete to generalize over today.
+// What *does* carry forward to that next phase: the shape (id, authorId,
+// parentId, content, createdAt/updatedAt, one level of self-relation)
+// and the one-module-per-table convention (lib/profile-comments.ts) —
+// ProjectComment, when it arrives, can mirror this file closely without
+// the two sharing a table or a runtime abstraction neither currently
+// needs.
+//
+// User <-> User, not User <-> Profile, for the same reason as Follow and
+// Project above: `profileUserId` identifies *whose* profile the comment
+// was left on by User.id, not Profile.id, so comments only exist where
+// there's an actual account to attach them to and to check "am I the
+// profile owner" against — an unclaimed Profile has no User, so it shows
+// no Comments UI at all (see app/members/[slug]/page.tsx), same
+// tradeoff already made for Follow/Discord/Projects.
+//
+// Both `profileUserId` and `authorId` cascade: if either User is deleted,
+// their authored comments and the comments left on their profile go with
+// them — same reasoning as Project.authorId's cascade ("if the account
+// goes, so does what it published"; here, extended to "and what was
+// published about them," since an unclaimed Profile losing its comment
+// section along with the account is more consistent than leaving
+// comments addressed to an account that no longer exists).
+//
+// Nesting is capped at one level purely in application code
+// (lib/profile-comments.ts's createProfileComment), not by a CHECK
+// constraint: a reply's `parentId` must point at a comment whose own
+// `parentId` is null, enforced by the query that looks up the parent
+// before creating the reply. The self-relation's `onDelete: Cascade`
+// means deleting a top-level comment removes its replies for free.
+model ProfileComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profileUserId String
+  profileUser   User   @relation("ProfileCommentsReceived", fields: [profileUserId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation("ProfileCommentsAuthored", fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Null for a top-level comment; set for a reply, pointing at a
+  // top-level comment's id. See the model comment above for how "only
+  // one level" is actually enforced.
+  parentId String?
+  parent   ProfileComment?  @relation("ProfileCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  ProfileComment[] @relation("ProfileCommentReplies")
+
+  // Powers "list all comments on this profile" — the main read pattern,
+  // used together with `parentId: null` to fetch just the top-level ones
+  // (see lib/profile-comments.ts's getProfileComments).
+  @@index([profileUserId])
+  // FK columns get an index by convention in this schema (see Follow,
+  // ProjectImage above) — not driven by a specific query today, but
+  // cheap insurance for the cascade deletes above and any future
+  // "comments I've written" view.
+  @@index([authorId])
+  @@index([parentId])
+
+  // Phase 12, point 11 — Comment Likes. Reverse relation only; the join
+  // rows themselves live in ProfileCommentLike below.
+  likes ProfileCommentLike[]
+}
+
+// Phase 12, point 11 — Comment Likes. "Anyone can like any comment" —
+// one row per (comment, liker), same shape as ProjectLike. Whether a
+// like counts as the profile owner's own "creator like" (the
+// highlighted heart in the mockup) is never stored as its own boolean:
+// it's derived at read time by comparing `userId` against the comment's
+// `profileUserId` (see lib/profile-comments.ts's getProfileComments),
+// so there's exactly one source of truth for "who owns this profile"
+// and it can never drift out of sync with a cached flag here.
+model ProfileCommentLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  commentId String
+  comment   ProfileComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // DB-level "can't like the same comment twice" guarantee — same idiom
+  // as ProjectLike's @@unique([projectId, userId]). Leftmost column also
+  // covers "list this comment's likes" for free.
+  @@unique([commentId, userId])
+  @@index([userId])
+}
+
+// Phase 8.1 — Project Comments.
+//
+// Mirrors ProfileComment's shape closely (id, authorId, parentId,
+// content, createdAt/updatedAt, one level of self-relation) — per the
+// note on that model — without sharing a table or a polymorphic
+// `targetType`/`targetId` abstraction with it: still no second concrete
+// comment target has shown up to justify that generalization, so this
+// stays its own table exactly like ProfileComment did.
+//
+// Unlike ProfileComment, there is no `projectUserId`-style second FK to
+// User here: "whose content is this on" is already `Project.authorId`,
+// reached through the `project` relation below, so
+// deleteProjectCommentIfAllowed (lib/project-comments.ts) checks
+// `OR: [{ authorId }, { project: { authorId } }]` instead of a direct
+// column on this model. That's the one real structural difference from
+// ProfileComment — everything else (nesting cap enforced in application
+// code only, cascade deletes, index shape) is the same.
+//
+// Both relations cascade: deleting the Project takes its comment thread
+// with it (same reasoning as Project.images above), and deleting a User
+// removes comments they authored (same as ProfileComment.authorId).
+model ProjectComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Null for a top-level comment; set for a reply, pointing at a
+  // top-level comment's id. Same "one level, enforced in application
+  // code" rule as ProfileComment.parentId — see
+  // lib/project-comments.ts's createProjectComment.
+  parentId String?
+  parent   ProjectComment?  @relation("ProjectCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  ProjectComment[] @relation("ProjectCommentReplies")
+
+  // Powers "list all comments on this project" — combined with
+  // `parentId: null` to fetch just the top-level ones (see
+  // lib/project-comments.ts's getProjectComments).
+  @@index([projectId])
+  // FK columns get an index by convention in this schema (see
+  // ProfileComment above) — cheap insurance for the cascade deletes.
+  @@index([authorId])
+  @@index([parentId])
+}
+
+// Phase 7.3 — Project Likes.
+//
+// Deliberately its own tiny table, not a boolean/array/count bolted onto
+// Project — same reasoning the brief is explicit about: the like count
+// must always be derived from `ProjectLike` rows (`prisma.projectLike.count`,
+// see lib/project-likes.ts), never cached as a column on Project, so it
+// can never drift out of sync with the actual set of likes.
+//
+// User <-> Project, not User <-> User or Profile <-> Project: liking is
+// an action a signed-in account performs on a piece of content, the same
+// "authoring/acting account is a User.id" convention Project.authorId,
+// Follow, and every Comment model already use — see those models' own
+// comments for why Profile is deliberately never the FK target.
+//
+// Both relations cascade: deleting the Project takes its likes with it
+// (same reasoning as Project.comments/images above), and deleting a User
+// removes likes they made (same as ProjectComment.authorId) — neither a
+// dangling like on a deleted project nor a like attributed to a deleted
+// account should be able to exist.
+model ProjectLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // The DB-level guarantee that "one user can only like a project once" —
+  // same idiom as Follow.@@unique([followerId, followingId]): toggleLike
+  // (lib/project-likes.ts) checks for this row's existence first rather
+  // than relying on catching a unique-constraint violation, but the
+  // constraint itself is still what makes a double-like impossible even
+  // under a race between two concurrent requests.
+  //
+  // As a compound index, this also covers "all likes on this project"
+  // (projectId is the leftmost column) — the separate index below is
+  // only needed for the reverse "all likes by this user" direction.
+  @@unique([projectId, userId])
+  // Powers "how many likes does this project have" (the main read
+  // pattern — getLikesCount in lib/project-likes.ts, run on every project
+  // page view) and "list all likes for this project" more generally.
+  @@index([projectId])
+  // FK-column index, same convention as every other model in this schema
+  // (see ProjectComment.authorId above) — not driven by a concrete query
+  // today, but cheap insurance for the cascade delete and any future
+  // "projects I've liked" view.
+  @@index([userId])
+}
+
+// Phase 7.4 — Notifications Foundation.
+//
+// One table for every kind of notification, discriminated by `type`,
+// rather than one table per source feature (FollowNotification,
+// CommentNotification, ...). This is the one place in the schema that
+// *does* take the polymorphic shape ProfileComment/ProjectComment's own
+// comments explicitly warn against for comments — justified here because
+// a notification's own content is identical regardless of source (who
+// caused it, what kind of thing happened, when, has it been seen), so
+// there's nothing concrete to duplicate per source the way a Comment's
+// content/author/replies shape would be. What a notification points at
+// (a Project, a ProfileComment, a ProjectComment, or nothing at all for
+// FOLLOW) genuinely differs per `type`, which is exactly what `entityId`
+// exists to carry.
+//
+// `entityId` is deliberately a plain nullable String, not a Prisma
+// relation — it can't be one: depending on `type` it names a row in
+// three different tables (or no row at all, for FOLLOW), and Prisma
+// relations are always to exactly one target model. Resolving it back to
+// something renderable (a link + a display string) happens entirely in
+// lib/notifications.ts, keyed off `type` — the one place that knows
+// "PROJECT_LIKE's entityId is a Project.id" etc. Adding a new
+// NotificationType later means adding one creation call at the source
+// and one branch in that resolver, never a schema change.
+enum NotificationType {
+  FOLLOW
+  PROFILE_COMMENT
+  PROJECT_COMMENT
+  // Phase 8.1 — Post Comments. Same role as PROJECT_COMMENT, for a
+  // top-level comment on a Post instead of a Project — see
+  // lib/notifications.ts's resolveNotificationDetails for how it's
+  // resolved to a message + link.
+  POST_COMMENT
+  COMMENT_REPLY
+  PROJECT_LIKE
+}
+
+model Notification {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+
+  // Whether the recipient has opened/seen this notification — see
+  // lib/notifications.ts's markAsRead/markAllAsRead. No `readAt`
+  // timestamp: nothing in this phase's brief needs "when was it read",
+  // only "has it been read", so that's the one column that exists.
+  read Boolean @default(false)
+
+  type NotificationType
+
+  // See the model comment above for why this is untyped rather than a
+  // relation. Null for types that don't need one (FOLLOW: the actor
+  // themselves *is* the whole notification, nothing further to point
+  // at).
+  entityId String?
+
+  // Who this notification is *for*. Cascade: if the recipient's account
+  // is deleted, there's no one left to show it to — same reasoning as
+  // every other User-owned row in this schema (Follow, ProjectLike, the
+  // Comment models).
+  recipientId String
+  recipient   User   @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  // Who caused this notification (followed, commented, liked, replied).
+  // Cascade here too: a notification attributed to an account that no
+  // longer exists isn't useful to keep around, and every other
+  // "who performed this action" FK in this schema (ProjectComment.authorId,
+  // ProjectLike.userId, Follow.followerId) cascades the same way.
+  actorId String
+  actor   User   @relation("NotificationsActed", fields: [actorId], references: [id], onDelete: Cascade)
+
+  // Powers the two real read patterns: "list my notifications, newest
+  // first" (recipientId + orderBy createdAt) and "how many are unread"
+  // (recipientId + read = false, a prefix of this same index). No
+  // separate index needed for the count query.
+  @@index([recipientId, createdAt])
+  // FK-column index, same convention as every other model in this
+  // schema (see ProjectLike.userId above).
+  @@index([actorId])
+}
+
+// Phase 8.0 — Posts Foundation.
+//
+// Deliberately its own table, not folded into Project and not behind a
+// shared "Content" model — per the brief: a Post is a small, disposable
+// community update (a question, a thought, a status), a Project is a
+// finished body of work with its own showcase fields (shortDescription,
+// githubUrl, externalUrl, visibility, a gallery). The two happen to both
+// have an author and creation timestamp, but that's the same amount of
+// overlap Project already has with ProfileComment/ProjectComment, which
+// this schema also keeps separate rather than unifying — see those
+// models' own comments. A shared "Content" table would need a
+// discriminator and a pile of nullable fields that only make sense for
+// one branch or the other; two plain tables need neither.
+model Post {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  content String @db.Text
+
+  // Exactly one optional image, stored the same way as Project.coverImage
+  // — just the public Storage URL, never a relation to a ProjectImage-
+  // style side table, since a Post only ever has the one (brief: "не
+  // делать несколько изображений"). If a future phase adds a multi-image
+  // gallery to posts, it'd follow ProjectImage's own precedent (a side
+  // table + this column retired or repurposed as a cover), not a
+  // redesign of this model.
+  imageUrl String?
+
+  // Author. Cascade: same reasoning as every other User-owned row in
+  // this schema (Follow, Project, ProjectComment, ProjectLike,
+  // Notification) — no orphaned posts left behind by a deleted account.
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Powers the one read pattern this phase has: "list this user's posts,
+  // newest first" (lib/posts.ts's getPostsByUserId). Already shaped for
+  // a future global feed too — see that function's own comment — a feed
+  // query would just drop the `userId` filter and lean on `createdAt`
+  // alone, still served by the same index's second column.
+  @@index([userId, createdAt])
+
+  // Phase 8.1 — Post Comments. Plain reverse relation, same shape as
+  // Project's own `comments ProjectComment[]` — see PostComment's own
+  // comment for why this is its own model rather than reusing
+  // ProjectComment.
+  comments PostComment[]
+}
+
+// Phase 8.1 — Post Comments.
+//
+// Deliberately mirrors ProjectComment field-for-field rather than
+// reusing that table with a nullable `projectId`/`postId` pair, or
+// generalizing both into one polymorphic "Comment" model — same
+// reasoning ProjectComment's own comment gives for not merging with
+// ProfileComment: two plain FK columns per table is simpler to reason
+// about (and to index, and to cascade) than one shared table with a
+// discriminator and two nullable target columns. This is now the third
+// near-identical comment table (ProfileComment, ProjectComment,
+// PostComment) — a real, growing case for a shared abstraction, but per
+// this phase's brief that refactor isn't in scope here; lib/post-comments.ts
+// is the one place that would need to change if that ever happens.
+model PostComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  // Null for a top-level comment; set for a reply, pointing at a
+  // top-level comment's id. Same "one level, enforced in application
+  // code" rule as ProjectComment.parentId/ProfileComment.parentId — see
+  // lib/post-comments.ts's createPostComment.
+  parentId String?
+  parent   PostComment?  @relation("PostCommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  PostComment[] @relation("PostCommentReplies")
+
+  // Powers "list all comments on this post" — combined with
+  // `parentId: null` to fetch just the top-level ones (see
+  // lib/post-comments.ts's getPostComments).
+  @@index([postId])
+  // FK columns get an index by convention in this schema (see
+  // ProjectComment above) — cheap insurance for the cascade deletes.
+  @@index([authorId])
+  @@index([parentId])
+}
+
+// Phase 10 — Tags.
+//
+// A real entity, not a string[] column on Project — per the brief:
+// "теги повинні бути окремою сутністю, а не просто рядком у базі даних"
+// so that future phases (tag colors/icons, categories, a per-tag page,
+// filtering/search by tag, "similar projects" recommendations) attach
+// new columns/relations to Tag or ProjectTag without ever touching
+// Project or migrating existing data again.
+//
+// Two kinds of Tag share this one table, discriminated by `isBuiltIn`:
+//   - Built-in tags (isBuiltIn: true) — the curated catalog in
+//     lib/tags.ts's BUILT_IN_TAGS, upserted into this table by
+//     `npx prisma db seed` (prisma/seed.ts). Global: any project can use
+//     them, they count toward the Feed's Popular Tags card, and they're
+//     the only tags a future global tag search/filter should ever
+//     surface.
+//   - Custom tags (isBuiltIn: false) — created ad hoc by a project's
+//     author when nothing built-in fits (lib/tags.ts's createCustomTag).
+//     Deliberately NOT deduplicated or shared across projects: per the
+//     brief, a custom tag must only ever be visible on the one project
+//     it was created for, never in the Popular Tags card, global search,
+//     or as a suggestion on a different project — so there's no benefit
+//     to two authors' identically-named custom tags resolving to the
+//     same row, only risk (one author's tag silently starting to appear
+//     on another author's project). Each custom tag creation always
+//     makes its own Tag row.
+//
+// `slug` is unique across BOTH kinds (see createCustomTag's own comment
+// for how a custom tag's slug is kept collision-free without that
+// meaning anything is shared) — it exists now so a future per-tag page
+// (`/tags/[slug]`) has a stable URL key on day one, even though nothing
+// links to it yet.
+model Tag {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  isBuiltIn Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Only ever set for a custom tag (see above) — who invented it, purely
+  // for future moderation/audit use. Built-in tags come from the seed
+  // script, not a user, so this stays null for them. Deliberately not a
+  // relation with an onDelete rule: a custom tag should survive its
+  // creator's account being deleted (it still belongs to a project that
+  // may have a different, unaffected author), so this is just an
+  // unenforced reference, not a FK.
+  createdByUserId String?
+
+  projectTags ProjectTag[]
+
+  // Powers the Feed's Popular Tags card and the tag picker's search —
+  // both always filter on `isBuiltIn` first (see lib/tags.ts).
+  @@index([isBuiltIn])
+}
+
+// Join row: one (Project, Tag) pairing. A plain join table rather than
+// an implicit Prisma many-to-many so it can carry its own `id` and
+// `createdAt` (when was this tag actually attached — not exposed in the
+// UI yet, but free to have for a future "recently tagged" view) and so
+// deleting a Tag or a Project cleanly cascades either direction without
+// relying on Prisma's implicit-relation table shape.
+model ProjectTag {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  tagId String
+  tag   Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  // The DB-level guarantee that a project can't have the same tag twice
+  // — same idiom as ProjectLike's @@unique([projectId, userId]).
+  // Leftmost column also covers "list this project's tags" for free.
+  @@unique([projectId, tagId])
+  // Powers "how many (public) projects use this tag" — the Popular Tags
+  // count query (lib/tags.ts's getPopularTags) filters/groups through
+  // this column.
+  @@index([tagId])
+}

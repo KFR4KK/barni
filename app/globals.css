@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens from the approved creative direction document.
+   Stored as "R G B" triplets (not hex) so Tailwind's opacity modifiers
+   (e.g. bg-graphite/80) can composite alpha correctly — see the
+   rgb(var(...) / <alpha-value>) pattern in tailwind.config.ts.
+
+   Revision (Правки 3) — `charcoal` and `line` used to carry a visible
+   blue tint (#1D2027 / #2A2D35). The client asked to drop that: every
+   surface — buttons, cards, panels, all of it — now sits on the same
+   flat #191919 as the page background, and only a faint, low-contrast
+   border distinguishes an "elevated" surface from the page behind it.
+   `charcoal` and `line` are kept as separate tokens (still useful for
+   `/60`, `/95`, etc. opacity modifiers on borders and overlays) but
+   their RGB values are now neutral, not blue. */
+:root {
+  --color-graphite: 25 25 25; /* #191919 — фон */
+  --color-charcoal: 25 25 25; /* #191919 — same flat surface as graphite, no blue tint */
+  --color-bone: 255 255 255; /* #FFFFFF — основний текст */
+  --color-ash: 138 141 151; /* #8A8D97 */
+  --color-brass: 198 161 92; /* #C6A15C — контрасти */
+  --color-line: 48 48 48; /* #303030 — neutral, low-contrast hairline border */
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes scroll-hint {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+.animate-scroll-hint {
+  animation: scroll-hint 2.2s ease-in-out infinite;
+}
+
+@keyframes ambient-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.08;
+  }
+  50% {
+    transform: translate3d(1.5%, -1%, 0) scale(1.04);
+    opacity: 0.12;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.08;
+  }
+}
+
+.animate-ambient-drift {
+  animation: ambient-drift 32s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Phase 5.2 — backdrop for components/ui/Modal.tsx's native <dialog>.
+   ::backdrop isn't reachable through Tailwind utility classes, so this is
+   the one hand-written rule; the color itself still comes from the same
+   --color-graphite token every other surface in the app uses. */
+dialog::backdrop {
+  background-color: rgb(var(--color-graphite) / 0.75);
+}
+
+/* components/landing/ProjectCarousel.tsx — hides the scrollbar chrome on
+   the horizontal project row (still fully scrollable by touch/trackpad/
+   drag, and the arrow buttons work regardless of this). No Tailwind
+   utility covers ::-webkit-scrollbar or scrollbar-width. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
