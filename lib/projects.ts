@@ -12,7 +12,7 @@ export function getProjectBySlug(slug: string): Promise<Project | null> {
 }
 
 export type ProjectWithAuthor = Project & {
-  author: { id: string; username: string; displayName: string | null; avatarUrl: string | null; createdAt: Date };
+  author: { id: string; username: string | null; displayName: string | null; avatarUrl: string | null; createdAt: Date };
   // Phase 6.3 — Project Gallery. Included here (rather than a separate
   // fetch) because this function's only caller, the project detail page
   // (app/projects/[slug]/page.tsx), needs both the byline and the
@@ -49,7 +49,7 @@ export function getProjectWithAuthor(slug: string): Promise<ProjectWithAuthor | 
 // no reason for every row in an author's project list to carry a second
 // join nothing reads.
 export type ProjectListItem = Project & {
-  author: { username: string; displayName: string | null };
+  author: { username: string | null; displayName: string | null };
   // Phase 12, point 8 — Local Project Filters. The profile page's
   // "Найбільше вподобань" sort option needs a like count per project;
   // a single cheap aggregate (`_count`), not a join that returns rows,
@@ -59,7 +59,7 @@ export type ProjectListItem = Project & {
 };
 
 function toProjectListItem(
-  row: Project & { author: { username: string; displayName: string | null }; _count: { likes: number } }
+  row: Project & { author: { username: string | null; displayName: string | null }; _count: { likes: number } }
 ): ProjectListItem {
   const { _count, ...rest } = row;
   return { ...rest, likesCount: _count.likes };

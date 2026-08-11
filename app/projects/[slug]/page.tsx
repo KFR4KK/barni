@@ -82,7 +82,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   // join, no second Profile lookup needed for it now that Profile has
   // no `slug` of its own (see prisma/schema.prisma).
   const authorProfile = await getProfileByUserId(project.authorId);
-  const authorName = authorProfile?.displayName || project.author.displayName || project.author.username;
+  const authorName =
+    authorProfile?.displayName || project.author.displayName || project.author.username || "Учасник";
   const authorHref = project.author.username ? `/members/${project.author.username}` : null;
   const authorAvatarUrl = authorProfile?.avatar || project.author.avatarUrl || null;
   const authorBio = authorProfile?.bio ?? "";

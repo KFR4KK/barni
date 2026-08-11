@@ -14,7 +14,7 @@ interface ProjectCardProps {
     // an author join yet still type-checks — see
     // lib/projects.ts's getProjectsByAuthorId, which is this card's only
     // current data source and does supply it.
-    author?: { username: string; displayName: string | null };
+    author?: { username: string | null; displayName: string | null };
     // Landing page's "landing" variant only — every ProjectListItem
     // already carries this (see lib/projects.ts's toProjectListItem),
     // it just wasn't rendered by either existing variant before now.

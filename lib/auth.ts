@@ -78,6 +78,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // separately as `discordId`.
           id: discordProfile.id,
           discordId: discordProfile.id,
+          username: null,
           displayName: discordProfile.global_name ?? discordProfile.username,
           avatarUrl: getDiscordAvatarUrl(discordProfile.id, discordProfile.avatar),
         };
@@ -113,6 +114,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return {
           id: googleProfile.sub,
           discordId: null,
+          username: null,
           displayName: googleProfile.name ?? null,
           avatarUrl: googleProfile.picture ?? null,
         };
