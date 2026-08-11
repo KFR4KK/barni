@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { MessageCircle, Chrome, Mail } from "lucide-react";
+import { MessageCircle, Chrome, Mail, Send } from "lucide-react";
 import { connectDiscordFromSettings, connectGoogleFromSettings } from "@/actions/auth";
 import { unlinkProvider, connectEmail, type AccountLinkingResult } from "@/actions/account-linking";
 import { MIN_PASSWORD_LENGTH } from "@/lib/password-validation";
+import { TelegramLoginWidget } from "@/components/auth/TelegramLoginWidget";
 import { cn } from "@/lib/utils";
 
 interface AccountRow {
@@ -19,10 +20,12 @@ interface ConnectedAccountsProps {
 }
 
 // Account Linking, section 7 — one row per possible sign-in method.
-// PROVIDERS below now covers Discord + Google (Telegram joins once that
-// provider exists in lib/auth.ts) — each entry pairs its icon/label with
-// the matching connect-from-settings Server Action, so this loop stays
-// provider-agnostic instead of special-casing each one.
+// PROVIDERS here covers only Discord + Google — both connect with a
+// plain Server Action button. Telegram has its own row below instead of
+// joining this loop: "Connect" for Telegram isn't a button that calls an
+// action, it's rendering Telegram's own login widget (see
+// TelegramLoginWidget's comment) — different enough shape that forcing
+// it into this loop would need a special case anyway.
 const PROVIDERS: { id: string; label: string; icon: typeof MessageCircle; connect: () => Promise<void> }[] = [
   { id: "discord", label: "Discord", icon: MessageCircle, connect: connectDiscordFromSettings },
   { id: "google", label: "Google", icon: Chrome, connect: connectGoogleFromSettings },
@@ -141,6 +144,50 @@ export function ConnectedAccounts({ email, hasPassword, accounts }: ConnectedAcc
           </div>
         );
       })}
+
+      {/* Telegram — separate from the PROVIDERS loop above (see that
+         const's comment): "Connect" here renders Telegram's actual login
+         widget rather than a plain button, since that's the only way
+         Telegram's own flow works (see TelegramLoginWidget.tsx).
+         Disconnect is identical to the other providers though — same
+         unlinkProvider action, same last-method guard. */}
+      {(() => {
+        const telegramAccount = accounts.find((a) => a.provider === "telegram");
+        const isConnected = Boolean(telegramAccount);
+
+        return (
+          <div className="flex flex-col gap-3 rounded-md border border-line px-4 py-3.5">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Send size={18} className="text-ash" aria-hidden="true" />
+                <div>
+                  <p className="font-sans text-sm text-bone">Telegram</p>
+                  <p className="font-mono text-xs text-ash">
+                    {isConnected ? "Connected" : "Not connected"}
+                  </p>
+                </div>
+              </div>
+
+              {isConnected && (
+                <button
+                  type="button"
+                  disabled={isPending || totalMethods <= 1}
+                  onClick={() => handleUnlink("telegram")}
+                  title={totalMethods <= 1 ? "Це єдиний спосіб входу" : undefined}
+                  className={cn(
+                    "rounded-md border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass",
+                    (isPending || totalMethods <= 1) && "opacity-60"
+                  )}
+                >
+                  Disconnect
+                </button>
+              )}
+            </div>
+
+            {!isConnected && <TelegramLoginWidget />}
+          </div>
+        );
+      })()}
     </div>
   );
 }
