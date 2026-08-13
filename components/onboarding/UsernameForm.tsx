@@ -15,7 +15,7 @@ export function UsernameForm() {
   return (
     <form action={formAction} className="flex flex-col gap-3">
       <div className="flex items-center rounded-md border border-line bg-graphite px-3 py-2.5 focus-within:border-brass">
-        <span className="font-mono text-sm text-ash">@</span>
+        <span className="font-sans text-sm text-ash">@</span>
         <input
           type="text"
           name="username"
@@ -35,7 +35,7 @@ export function UsernameForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="inline-flex items-center justify-center rounded-md border border-line px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass disabled:opacity-60"
+        className="inline-flex items-center justify-center rounded-md border border-line px-4 py-2.5 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass disabled:opacity-60"
       >
         {isPending ? "Зберігаємо…" : "Продовжити"}
       </button>

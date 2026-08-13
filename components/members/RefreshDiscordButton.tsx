@@ -16,7 +16,7 @@ export function RefreshDiscordButton() {
     <form action={refreshDiscordMembershipAction}>
       <button
         type="submit"
-        className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-ash underline decoration-transparent underline-offset-4 transition-colors duration-150 hover:text-bone hover:decoration-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+        className="inline-flex items-center gap-2 font-sans text-xs uppercase tracking-wider text-ash underline decoration-transparent underline-offset-4 transition-colors duration-150 hover:text-bone hover:decoration-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
       >
         Оновити статус Discord
       </button>

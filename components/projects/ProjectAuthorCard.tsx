@@ -85,13 +85,13 @@ export function ProjectAuthorCard({
               />
             )}
           </div>
-          {authorUsername && <p className="truncate font-mono text-xs text-ash">@{authorUsername}</p>}
-          <p className="mt-0.5 font-mono text-[11px] text-ash/60">{formatRelativeTime(postedAt)}</p>
+          {authorUsername && <p className="truncate font-sans text-xs text-ash">@{authorUsername}</p>}
+          <p className="mt-0.5 font-sans text-[11px] text-ash/60">{formatRelativeTime(postedAt)}</p>
         </div>
       </div>
 
       <div>
-        <p className="font-mono text-xs uppercase tracking-wider text-ash">Автор</p>
+        <p className="font-sans text-xs uppercase tracking-wider text-ash">Автор</p>
         <ul className="mt-3 flex flex-col gap-1.5">
           <li className="flex items-center gap-2 font-sans text-sm text-bone/90">
             <Cake size={14} className="shrink-0 text-ash" aria-hidden="true" />
@@ -108,7 +108,7 @@ export function ProjectAuthorCard({
 
       {activeSocials.length > 0 && (
         <div>
-          <p className="font-mono text-xs uppercase tracking-wider text-ash">Контакти</p>
+          <p className="font-sans text-xs uppercase tracking-wider text-ash">Контакти</p>
           <ul className="mt-3 flex flex-col gap-2">
             {activeSocials.map((platform) => {
               const Icon = socialIcons[platform];

@@ -59,7 +59,7 @@ export function UserMenu({ username, displayName, avatarUrl }: UserMenuProps) {
         ) : (
           <UserRound className="h-6 w-6 text-ash" aria-hidden="true" />
         )}
-        <span className="hidden font-mono text-xs uppercase tracking-wider text-bone sm:inline">
+        <span className="hidden font-sans text-xs uppercase tracking-wider text-bone sm:inline">
           {label}
         </span>
         <ChevronDown
@@ -77,7 +77,7 @@ export function UserMenu({ username, displayName, avatarUrl }: UserMenuProps) {
           className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-card border border-line bg-charcoal shadow-card"
         >
           <div className="border-b border-line/60 px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ash">Увійшли як</p>
+            <p className="font-sans text-[10px] uppercase tracking-wider text-ash">Увійшли як</p>
             <p className="truncate font-sans text-sm text-bone">{label}</p>
           </div>
 
@@ -91,7 +91,7 @@ export function UserMenu({ username, displayName, avatarUrl }: UserMenuProps) {
             href="/profile"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
+            className="block px-4 py-2.5 font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
           >
             Профіль
           </Link>
@@ -100,7 +100,7 @@ export function UserMenu({ username, displayName, avatarUrl }: UserMenuProps) {
             href="/settings"
             role="menuitem"
             onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
+            className="block px-4 py-2.5 font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
           >
             Налаштування
           </Link>
@@ -109,7 +109,7 @@ export function UserMenu({ username, displayName, avatarUrl }: UserMenuProps) {
             <button
               type="submit"
               role="menuitem"
-              className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
+              className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
             >
               <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
               Вийти

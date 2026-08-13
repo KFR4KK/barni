@@ -67,7 +67,7 @@ export function ConnectedAccounts({ email, hasPassword, accounts }: ConnectedAcc
           <Mail size={18} className="text-ash" aria-hidden="true" />
           <div>
             <p className="font-sans text-sm text-bone">Email</p>
-            <p className="font-mono text-xs text-ash">
+            <p className="font-sans text-xs text-ash">
               {isEmailConnected ? email : "Not connected"}
             </p>
           </div>
@@ -91,7 +91,7 @@ export function ConnectedAccounts({ email, hasPassword, accounts }: ConnectedAcc
           <button
             type="submit"
             disabled={isEmailPending}
-            className="shrink-0 rounded-md border border-line px-4 py-2 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass disabled:opacity-60"
+            className="shrink-0 rounded-md border border-line px-4 py-2 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass disabled:opacity-60"
           >
             {isEmailConnected ? "Change" : "Connect"}
           </button>
@@ -110,7 +110,7 @@ export function ConnectedAccounts({ email, hasPassword, accounts }: ConnectedAcc
               <Icon size={18} className="text-ash" aria-hidden="true" />
               <div>
                 <p className="font-sans text-sm text-bone">{label}</p>
-                <p className="font-mono text-xs text-ash">
+                <p className="font-sans text-xs text-ash">
                   {isConnected ? "Connected" : "Not connected"}
                 </p>
               </div>
@@ -124,7 +124,7 @@ export function ConnectedAccounts({ email, hasPassword, accounts }: ConnectedAcc
                   onClick={() => handleUnlink(id)}
                   title={totalMethods <= 1 ? "Це єдиний спосіб входу" : undefined}
                   className={cn(
-                    "rounded-md border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass",
+                    "rounded-md border border-line px-3 py-1.5 font-sans text-[10px] uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass",
                     (isPending || totalMethods <= 1) && "opacity-60"
                   )}
                 >
@@ -134,7 +134,7 @@ export function ConnectedAccounts({ email, hasPassword, accounts }: ConnectedAcc
                 <form action={connect}>
                   <button
                     type="submit"
-                    className="rounded-md border border-line px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass"
+                    className="rounded-md border border-line px-3 py-1.5 font-sans text-[10px] uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass"
                   >
                     Connect
                   </button>

@@ -16,4 +16,4 @@ export const formFieldClasses = cn(
   "focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
 );
 
-export const formLabelClasses = "font-mono text-xs uppercase tracking-wider text-ash";
+export const formLabelClasses = "font-sans text-xs uppercase tracking-wider text-ash";

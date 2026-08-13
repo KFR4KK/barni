@@ -29,7 +29,7 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
   return (
     <Container>
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
-        <p className="font-mono text-xs uppercase tracking-wider text-brass">Помилка входу</p>
+        <p className="font-sans text-xs uppercase tracking-wider text-brass">Помилка входу</p>
         <h1 className="font-serif text-2xl text-bone">Щось пішло не так</h1>
         <p className="max-w-md font-sans text-sm text-ash">{message}</p>
         <Button href="/" variant="outline">

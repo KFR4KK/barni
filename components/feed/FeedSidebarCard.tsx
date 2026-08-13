@@ -18,7 +18,7 @@ export function FeedSidebarCard({ title, subtitle, children, className }: FeedSi
     >
       <div className="mb-5">
         <h2 className="font-display text-base font-medium text-bone">{title}</h2>
-        <p className="mt-0.5 font-mono text-[11px] text-ash/80">{subtitle}</p>
+        <p className="mt-0.5 font-sans text-[11px] text-ash/80">{subtitle}</p>
       </div>
       {children}
     </div>

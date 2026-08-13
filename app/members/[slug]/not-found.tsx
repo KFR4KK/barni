@@ -10,7 +10,7 @@ export default function MemberNotFound() {
         <p className="mt-4 font-sans text-ash">Можливо, він пішов, або посилання неправильне.</p>
         <Link
           href="/"
-          className="mt-8 inline-block font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-150 hover:text-bone focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+          className="mt-8 inline-block font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-150 hover:text-bone focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
         >
           ← До списку учасників
         </Link>

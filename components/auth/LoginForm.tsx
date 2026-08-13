@@ -12,7 +12,7 @@ const fieldClasses =
   "w-full rounded-md border border-line bg-graphite px-3 py-2.5 font-sans text-sm text-bone placeholder:text-ash/50 focus:border-brass focus:outline-none";
 
 const oauthButtonClasses =
-  "inline-flex w-full items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass";
+  "inline-flex w-full items-center justify-center gap-2 rounded-md border border-line px-4 py-2.5 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass";
 
 const primaryButtonClasses =
   "inline-flex w-full items-center justify-center rounded-md bg-brass px-4 py-2.5 font-sans text-sm font-medium text-graphite transition-opacity duration-fast hover:opacity-90 disabled:opacity-60";
@@ -54,7 +54,7 @@ export function LoginForm() {
 
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-line" />
-        <span className="font-mono text-[10px] uppercase tracking-wider text-ash">or</span>
+        <span className="font-sans text-[10px] uppercase tracking-wider text-ash">or</span>
         <div className="h-px flex-1 bg-line" />
       </div>
 

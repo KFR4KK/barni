@@ -10,7 +10,7 @@ export function SignInButton() {
   return (
     <Link
       href="/login"
-      className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+      className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
     >
       <MessageCircle className="h-4 w-4" aria-hidden="true" />
       Увійти

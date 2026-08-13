@@ -42,7 +42,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
   return (
     <Container>
       <div className="py-16 md:py-24">
-        <p className="font-mono text-xs uppercase tracking-wider text-brass">Редагування</p>
+        <p className="font-sans text-xs uppercase tracking-wider text-brass">Редагування</p>
         <h1 className="mt-2 font-serif text-3xl text-bone md:text-4xl">Ваш профіль</h1>
         <p className="mt-3 max-w-[58ch] font-sans text-sm text-ash">
           Ці зміни одразу з&apos;являться на сторінці «{profile.displayName}» та в списку
@@ -50,7 +50,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
         </p>
 
         {errorMessage && (
-          <p className="mt-6 font-mono text-xs text-brass">{errorMessage}</p>
+          <p className="mt-6 font-sans text-xs text-brass">{errorMessage}</p>
         )}
 
         <form action={updateProfileAction} className="mt-10 flex flex-col gap-8">
@@ -131,7 +131,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
               Аватар (зображення з пристрою)
             </label>
             {profile.avatar && (
-              <p className="font-mono text-[11px] text-ash">
+              <p className="font-sans text-[11px] text-ash">
                 Поточний аватар уже встановлено. Виберіть новий файл, щоб замінити його — якщо
                 нічого не вибрати, поточний аватар залишиться без змін.
               </p>
@@ -141,7 +141,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
               name="avatarFile"
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
-              className={cn(fieldClasses, "file:mr-4 file:rounded-md file:border-0 file:bg-charcoal file:px-3 file:py-1.5 file:font-mono file:text-xs file:text-bone")}
+              className={cn(fieldClasses, "file:mr-4 file:rounded-md file:border-0 file:bg-charcoal file:px-3 file:py-1.5 file:font-sans file:text-xs file:text-bone")}
             />
           </div>
 
@@ -150,7 +150,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
               Банер (зображення, GIF або коротке відео без звуку)
             </label>
             {profile.banner && (
-              <p className="font-mono text-[11px] text-ash">
+              <p className="font-sans text-[11px] text-ash">
                 Поточний банер: {profile.bannerType.toLowerCase()}. Виберіть новий файл, щоб замінити
                 його — якщо нічого не вибрати, поточний банер залишиться без змін.
               </p>
@@ -160,7 +160,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
               name="bannerFile"
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm"
-              className={cn(fieldClasses, "file:mr-4 file:rounded-md file:border-0 file:bg-charcoal file:px-3 file:py-1.5 file:font-mono file:text-xs file:text-bone")}
+              className={cn(fieldClasses, "file:mr-4 file:rounded-md file:border-0 file:bg-charcoal file:px-3 file:py-1.5 file:font-sans file:text-xs file:text-bone")}
             />
           </div>
 
@@ -196,7 +196,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
             <label htmlFor="birthday" className={labelClasses}>
               Дата народження
             </label>
-            <p className="font-mono text-[11px] text-ash">
+            <p className="font-sans text-[11px] text-ash">
               Вік на сторінці профілю рахується автоматично від цієї дати — власне число віку ніде
               не зберігається.
             </p>
@@ -211,7 +211,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
 
           <fieldset className="flex flex-col gap-4 rounded-md border border-line/60 p-5">
             <legend className={labelClasses}>Улюблений трек</legend>
-            <p className="font-mono text-[11px] text-ash">
+            <p className="font-sans text-[11px] text-ash">
               Локальний файл (mp3/wav/ogg), не посилання на стрімінговий сервіс.
             </p>
 
@@ -231,7 +231,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
                 name="musicFile"
                 type="file"
                 accept="audio/mpeg,audio/wav,audio/x-wav,audio/ogg"
-                className={cn(fieldClasses, "file:mr-4 file:rounded-md file:border-0 file:bg-charcoal file:px-3 file:py-1.5 file:font-mono file:text-xs file:text-bone")}
+                className={cn(fieldClasses, "file:mr-4 file:rounded-md file:border-0 file:bg-charcoal file:px-3 file:py-1.5 file:font-sans file:text-xs file:text-bone")}
               />
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -266,7 +266,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
 
           <fieldset className="flex flex-col gap-4 rounded-md border border-line/60 p-5">
             <legend className={labelClasses}>Кастомний медіа-блок (сайдбар)</legend>
-            <p className="font-mono text-[11px] text-ash">
+            <p className="font-sans text-[11px] text-ash">
               Необов&apos;язковий великий блок під карткою групи — зображення, GIF або коротке відео.
               Якщо нічого не завантажено, блок просто не показується.
             </p>
@@ -281,13 +281,13 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
               name="widgetMediaFile"
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm"
-              className={cn(fieldClasses, "file:mr-4 file:rounded-md file:border-0 file:bg-charcoal file:px-3 file:py-1.5 file:font-mono file:text-xs file:text-bone")}
+              className={cn(fieldClasses, "file:mr-4 file:rounded-md file:border-0 file:bg-charcoal file:px-3 file:py-1.5 file:font-sans file:text-xs file:text-bone")}
             />
           </fieldset>
 
           <fieldset className="flex flex-col gap-4">
             <legend className={labelClasses}>Додаткові віджети</legend>
-            <p className="font-mono text-[11px] text-ash">
+            <p className="font-sans text-[11px] text-ash">
               Заповніть будь-яке з полів, щоб увімкнути відповідний віджет у сайдбарі; залиште
               порожнім, щоб приховати.
             </p>
@@ -332,7 +332,7 @@ export default async function ProfileEditPage({ searchParams }: ProfileEditPageP
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+              className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
             >
               Зберегти зміни
             </button>

@@ -36,7 +36,7 @@ export function ProjectsSection({ projects, isOwner, showHeading = true }: Proje
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2
             id="profile-projects-heading"
-            className="font-mono text-xs uppercase tracking-[0.2em] text-ash"
+            className="font-sans text-xs uppercase tracking-[0.2em] text-ash"
           >
             Projects
           </h2>

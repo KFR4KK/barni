@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { ProjectsSearchBar } from "@/components/projects/gallery/ProjectsSearchBar";
-import { ProjectsFilters } from "@/components/projects/gallery/ProjectsFilters";
+import { ProjectsFilterMenu } from "@/components/projects/gallery/ProjectsFilterMenu";
 import { ProjectsGrid } from "@/components/projects/gallery/ProjectsGrid";
 import { ProjectsEmptyState } from "@/components/projects/gallery/ProjectsEmptyState";
 import { ProjectsSearchEmptyState } from "@/components/projects/gallery/ProjectsSearchEmptyState";
@@ -97,9 +97,9 @@ export function ProjectsGalleryClient({ initialProjects, initialHasMore }: Proje
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <ProjectsFilters value={sort} onChange={setSort} />
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <ProjectsSearchBar value={searchInput} onChange={setSearchInput} />
+        <ProjectsFilterMenu value={sort} onChange={setSort} />
       </div>
 
       {showSearchEmptyState ? (

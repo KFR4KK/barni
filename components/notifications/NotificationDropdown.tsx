@@ -153,7 +153,7 @@ export function NotificationDropdown({ initialUnreadCount }: NotificationDropdow
       >
         <Bell className="h-5 w-5 text-ash" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brass px-1 font-mono text-[10px] font-medium leading-none text-charcoal">
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brass px-1 font-sans text-[10px] font-medium leading-none text-charcoal">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
@@ -165,13 +165,13 @@ export function NotificationDropdown({ initialUnreadCount }: NotificationDropdow
           className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-card border border-line bg-charcoal shadow-card"
         >
           <div className="flex items-center justify-between border-b border-line/60 px-4 py-3">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-ash">Сповіщення</p>
+            <p className="font-sans text-[10px] uppercase tracking-wider text-ash">Сповіщення</p>
             <button
               type="button"
               onClick={handleMarkAllAsRead}
               disabled={unreadCount === 0}
               className={cn(
-                "font-mono text-[10px] uppercase tracking-wider text-ash transition-colors duration-fast hover:text-brass disabled:cursor-default disabled:opacity-40 disabled:hover:text-ash"
+                "font-sans text-[10px] uppercase tracking-wider text-ash transition-colors duration-fast hover:text-brass disabled:cursor-default disabled:opacity-40 disabled:hover:text-ash"
               )}
             >
               Позначити всі як прочитані
@@ -180,17 +180,17 @@ export function NotificationDropdown({ initialUnreadCount }: NotificationDropdow
 
           <div className="max-h-96 overflow-y-auto">
             {list.status === "loading" && (
-              <p className="px-4 py-6 text-center font-mono text-xs text-ash">Завантаження…</p>
+              <p className="px-4 py-6 text-center font-sans text-xs text-ash">Завантаження…</p>
             )}
 
             {list.status === "error" && (
-              <p className="px-4 py-6 text-center font-mono text-xs text-ash">
+              <p className="px-4 py-6 text-center font-sans text-xs text-ash">
                 Не вдалося завантажити сповіщення.
               </p>
             )}
 
             {list.status === "loaded" && list.notifications.length === 0 && (
-              <p className="px-4 py-6 text-center font-mono text-xs text-ash">
+              <p className="px-4 py-6 text-center font-sans text-xs text-ash">
                 Поки що немає сповіщень.
               </p>
             )}

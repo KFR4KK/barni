@@ -24,7 +24,7 @@ export function PopularTagsCard({ tags, className }: PopularTagsCardProps) {
             key={tag.name}
             className={cn(
               "flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0",
-              "font-mono text-[11px]"
+              "font-sans text-[11px]"
             )}
           >
             <span className="text-ash">{tag.name}</span>

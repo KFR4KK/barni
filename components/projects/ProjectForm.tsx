@@ -323,7 +323,7 @@ export function ProjectForm({ mode, project, initialTags }: ProjectFormProps) {
           onChange={(event) => setShortDescription(event.target.value)}
           className={formFieldClasses}
         />
-        <p className="font-mono text-[10px] text-ash/70">{(shortDescription ?? "").length}/200</p>
+        <p className="font-sans text-[10px] text-ash/70">{(shortDescription ?? "").length}/200</p>
       </div>
 
       <TagPicker
@@ -387,7 +387,7 @@ export function ProjectForm({ mode, project, initialTags }: ProjectFormProps) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="inline-flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
+          className="inline-flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2 font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
         >
           {isUploading ? (
             <>
@@ -401,7 +401,7 @@ export function ProjectForm({ mode, project, initialTags }: ProjectFormProps) {
             </>
           )}
         </button>
-        {uploadError && <p className="font-mono text-[11px] text-brass">{UPLOAD_ERROR_MESSAGE}</p>}
+        {uploadError && <p className="font-sans text-[11px] text-brass">{UPLOAD_ERROR_MESSAGE}</p>}
       </div>
 
       {/* Phase 6.4 — Project Creation Flow. Create mode only: on the
@@ -452,7 +452,7 @@ export function ProjectForm({ mode, project, initialTags }: ProjectFormProps) {
             type="button"
             onClick={() => galleryInputRef.current?.click()}
             disabled={isSubmitting || galleryItems.length >= MAX_GALLERY_IMAGES}
-            className="inline-flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
+            className="inline-flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2 font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
           >
             <Upload size={14} />
             {galleryItems.length >= MAX_GALLERY_IMAGES ? "Досягнуто ліміт" : "Додати зображення"}
@@ -512,13 +512,13 @@ export function ProjectForm({ mode, project, initialTags }: ProjectFormProps) {
         </div>
       )}
 
-      {error && <p className="font-mono text-xs text-brass">{SAVE_ERROR_MESSAGE}</p>}
+      {error && <p className="font-sans text-xs text-brass">{SAVE_ERROR_MESSAGE}</p>}
 
       <div className="flex items-center gap-4">
         <button
           type="submit"
           disabled={isSubmitting || isUploading}
-          className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
         >
           {isUploadingGallery ? (
             <>

@@ -64,7 +64,7 @@ export default async function FeedPage() {
                 <Button
                   href="/projects/new"
                   variant="outline"
-                  className="shrink-0 self-stretch whitespace-nowrap rounded-[20px] px-6 py-3 font-mono text-xs uppercase tracking-wider sm:min-w-[180px] sm:justify-center"
+                  className="shrink-0 self-stretch whitespace-nowrap rounded-[20px] px-6 py-3 font-sans text-xs uppercase tracking-wider sm:min-w-[180px] sm:justify-center"
                 >
                   Створити проєкт
                 </Button>
@@ -86,7 +86,7 @@ export default async function FeedPage() {
                     <Button
                       href="/projects/new"
                       variant="outline"
-                      className="rounded-[20px] px-6 py-3 font-mono text-xs uppercase tracking-wider"
+                      className="rounded-[20px] px-6 py-3 font-sans text-xs uppercase tracking-wider"
                     >
                       Створити проєкт
                     </Button>

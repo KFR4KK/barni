@@ -18,7 +18,6 @@ const config: Config = {
       fontFamily: {
         serif: ["var(--font-serif)", "serif"],
         sans: ["var(--font-sans)", "sans-serif"],
-        mono: ["var(--font-mono)", "monospace"],
         // v0.3.0-alpha — Unbounded, used for the new home page's large type
         // only (hero, big headings, CTA). Every other page keeps `font-serif`.
         display: ["var(--font-display)", "sans-serif"],

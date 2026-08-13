@@ -16,11 +16,11 @@ export function MemberRow({ member, index }: MemberRowProps) {
     >
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex min-w-0 items-baseline gap-6">
-          <span className="font-mono text-xs text-ash">{String(index + 1).padStart(2, "0")}</span>
+          <span className="font-sans text-xs text-ash">{String(index + 1).padStart(2, "0")}</span>
           <span className="truncate font-serif text-2xl text-bone">{member.nickname}</span>
         </div>
         {member.skills && member.skills.length > 0 && (
-          <span className="pl-[2.75rem] font-mono text-xs uppercase tracking-wider text-ash">
+          <span className="pl-[2.75rem] font-sans text-xs uppercase tracking-wider text-ash">
             {member.skills.join(" · ")}
           </span>
         )}
@@ -39,7 +39,7 @@ export function MemberRow({ member, index }: MemberRowProps) {
         </div>
         <span
           aria-hidden="true"
-          className="font-mono text-ash transition-transform duration-150 group-hover:translate-x-1 group-hover:text-brass"
+          className="font-sans text-ash transition-transform duration-150 group-hover:translate-x-1 group-hover:text-brass"
         >
           →
         </span>

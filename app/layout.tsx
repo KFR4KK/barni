@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Fraunces, Inter, JetBrains_Mono, Unbounded } from "next/font/google";
+import { Fraunces, Inter, Unbounded } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { NoiseOverlay } from "@/components/effects/NoiseOverlay";
@@ -16,13 +16,6 @@ const fraunces = Fraunces({
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-mono",
   display: "swap",
 });
 
@@ -50,7 +43,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="uk"
-      className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} ${unbounded.variable}`}
+      className={`${fraunces.variable} ${inter.variable} ${unbounded.variable}`}
     >
       <body className="bg-graphite font-sans text-bone antialiased">
         <NoiseOverlay />

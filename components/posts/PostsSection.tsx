@@ -51,7 +51,7 @@ export function PostsSection({
   return (
     <section aria-labelledby="profile-posts-heading">
       {showHeading && (
-        <h2 id="profile-posts-heading" className="font-mono text-xs uppercase tracking-[0.2em] text-ash">
+        <h2 id="profile-posts-heading" className="font-sans text-xs uppercase tracking-[0.2em] text-ash">
           Posts
         </h2>
       )}

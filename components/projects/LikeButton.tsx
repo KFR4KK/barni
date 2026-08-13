@@ -75,7 +75,7 @@ export function LikeButton({ slug, initialLiked, initialLikesCount, canLike }: L
       <form action={signInWithDiscord} className="flex flex-col gap-1.5">
         <button
           type="submit"
-          className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+          className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
         >
           <Heart className="h-4 w-4" aria-hidden="true" />
           {likesCount}
@@ -92,7 +92,7 @@ export function LikeButton({ slug, initialLiked, initialLikesCount, canLike }: L
         disabled={isPending}
         aria-pressed={liked}
         className={cn(
-          "inline-flex items-center gap-2 rounded-md border px-4 py-2 font-mono text-xs uppercase tracking-wider transition-colors duration-fast focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60",
+          "inline-flex items-center gap-2 rounded-md border px-4 py-2 font-sans text-xs uppercase tracking-wider transition-colors duration-fast focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60",
           liked
             ? "border-brass text-brass hover:border-line hover:text-bone"
             : "border-line text-bone hover:border-brass hover:text-brass"
@@ -101,7 +101,7 @@ export function LikeButton({ slug, initialLiked, initialLikesCount, canLike }: L
         <Heart className="h-4 w-4" fill={liked ? "currentColor" : "none"} aria-hidden="true" />
         {likesCount}
       </button>
-      {error && <p className="font-mono text-xs text-ash">Не вдалося оновити лайк.</p>}
+      {error && <p className="font-sans text-xs text-ash">Не вдалося оновити лайк.</p>}
     </div>
   );
 }

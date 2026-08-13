@@ -133,24 +133,17 @@ export function PostCard({ post, comments, viewer, variant = "default" }: PostCa
               </p>
             )}
             {isFeed && (
-              <span className="font-mono text-[11px] text-ash">@{author.username}</span>
+              <span className="font-sans text-[11px] text-ash">@{author.username}</span>
             )}
             {isFeed && author.profileUsername && author.serverMember && (
               <DiscordBadge serverMember compact />
             )}
           </div>
-          <p className="mt-0.5 font-mono text-[11px] text-ash">{formatRelativeTime(post.createdAt)}</p>
+          <p className="mt-0.5 font-sans text-[11px] text-ash">{formatRelativeTime(post.createdAt)}</p>
         </div>
       </div>
 
-      <p
-        className={cn(
-          "whitespace-pre-wrap leading-relaxed text-bone/90",
-          isFeed ? "font-mono text-sm" : "font-sans text-sm"
-        )}
-      >
-        {post.content}
-      </p>
+      <p className="whitespace-pre-wrap text-sm leading-relaxed text-bone/90">{post.content}</p>
 
       {post.imageUrl && (
         <div
@@ -194,7 +187,7 @@ export function PostCard({ post, comments, viewer, variant = "default" }: PostCa
             onClick={() => setExpanded((value) => !value)}
             aria-expanded={expanded}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-xs transition-colors duration-fast",
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs transition-colors duration-fast",
               expanded
                 ? "border-brass text-brass"
                 : "border-line/60 text-ash hover:border-brass hover:text-brass"
@@ -209,7 +202,7 @@ export function PostCard({ post, comments, viewer, variant = "default" }: PostCa
              the mockup's layout without pretending to do something it
              can't. */}
           <span
-            className="inline-flex cursor-default items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ash/50"
+            className="inline-flex cursor-default items-center gap-1.5 font-sans text-[11px] uppercase tracking-wider text-ash/50"
             title="Функція скарг ще не реалізована"
           >
             <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />

@@ -150,7 +150,7 @@ export function ProjectGalleryEditor({ projectSlug, initialImages }: ProjectGall
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={isUploading || atLimit}
-        className="inline-flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
+        className="inline-flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2 font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
       >
         {isUploading ? (
           <>
@@ -165,8 +165,8 @@ export function ProjectGalleryEditor({ projectSlug, initialImages }: ProjectGall
         )}
       </button>
 
-      {uploadError && <p className="font-mono text-[11px] text-brass">{UPLOAD_ERROR_MESSAGE}</p>}
-      {deleteError && <p className="font-mono text-[11px] text-brass">{DELETE_ERROR_MESSAGE}</p>}
+      {uploadError && <p className="font-sans text-[11px] text-brass">{UPLOAD_ERROR_MESSAGE}</p>}
+      {deleteError && <p className="font-sans text-[11px] text-brass">{DELETE_ERROR_MESSAGE}</p>}
     </div>
   );
 }

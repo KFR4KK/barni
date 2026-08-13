@@ -58,7 +58,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           type="button"
           onClick={onClose}
           aria-label="Закрити"
-          className="font-mono text-ash transition-colors duration-fast hover:text-bone focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+          className="font-sans text-ash transition-colors duration-fast hover:text-bone focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
         >
           ✕
         </button>

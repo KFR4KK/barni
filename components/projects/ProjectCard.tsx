@@ -154,7 +154,7 @@ export function ProjectCard({ project, variant = "default" }: ProjectCardProps) 
            project, not a post" at a glance — this tag is that signal.
            Reuses the site's one accent color (brass) rather than
            introducing a new token. */}
-        <span className="absolute left-4 top-4 rounded-full border border-brass/40 bg-graphite/80 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-brass backdrop-blur-sm">
+        <span className="absolute left-4 top-4 rounded-full border border-brass/40 bg-graphite/80 px-3 py-1 font-sans text-[10px] uppercase tracking-wider text-brass backdrop-blur-sm">
           Проєкт
         </span>
       </div>
@@ -162,14 +162,14 @@ export function ProjectCard({ project, variant = "default" }: ProjectCardProps) 
         <div className="flex items-start justify-between gap-3">
           <h3 className="font-serif text-xl text-bone">{project.title}</h3>
           {project.visibility === "PRIVATE" && (
-            <span className="shrink-0 rounded-full border border-line/60 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-ash">
+            <span className="shrink-0 rounded-full border border-line/60 px-2 py-0.5 font-sans text-[10px] uppercase tracking-wider text-ash">
               Private
             </span>
           )}
         </div>
         <p className="line-clamp-3 font-sans text-sm text-ash/80">{excerpt}</p>
         {(authorName || project.createdAt) && (
-          <p className="mt-auto pt-2 font-mono text-[11px] uppercase tracking-wider text-ash/70">
+          <p className="mt-auto pt-2 font-sans text-[11px] uppercase tracking-wider text-ash/70">
             {authorName}
             {authorName && " · "}
             {formatDate(project.createdAt.toISOString())}

@@ -299,7 +299,7 @@ export function PostComposer({
               </button>
             </div>
           )}
-          {uploadError && <p className="font-mono text-[11px] text-brass">{UPLOAD_ERROR_MESSAGE}</p>}
+          {uploadError && <p className="font-sans text-[11px] text-brass">{UPLOAD_ERROR_MESSAGE}</p>}
 
           <div className="flex items-center justify-between gap-4 border-t border-line/60 pt-3">
             <div className="flex items-center gap-2">
@@ -314,7 +314,7 @@ export function PostComposer({
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading}
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-xs text-ash transition-colors duration-fast hover:bg-charcoal hover:text-brass disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-sans text-xs text-ash transition-colors duration-fast hover:bg-charcoal hover:text-brass disabled:opacity-60"
               >
                 {isUploading ? (
                   <Loader2 size={15} className="animate-spin" />
@@ -342,7 +342,7 @@ export function PostComposer({
                   type="button"
                   onClick={handleCancel}
                   disabled={isSubmitting}
-                  className="font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:text-bone disabled:opacity-60"
+                  className="font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:text-bone disabled:opacity-60"
                 >
                   Скасувати
                 </button>
@@ -350,7 +350,7 @@ export function PostComposer({
               <button
                 type="submit"
                 disabled={isSubmitting || isUploading || content.trim().length === 0}
-                className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
               >
                 {isSubmitting ? (
                   <>
@@ -364,7 +364,7 @@ export function PostComposer({
             </div>
           </div>
 
-          {error && <p className="font-mono text-xs text-brass">{SAVE_ERROR_MESSAGE}</p>}
+          {error && <p className="font-sans text-xs text-brass">{SAVE_ERROR_MESSAGE}</p>}
         </form>
       )}
     </div>

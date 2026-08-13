@@ -45,7 +45,7 @@ export function NotificationItem({ notification, onOpen }: NotificationItemProps
 
       <div className="min-w-0 flex-1">
         <p className="font-sans text-sm leading-snug text-bone/90">{message}</p>
-        <p className="mt-1 font-mono text-[11px] text-ash">{formatRelativeTime(createdAt)}</p>
+        <p className="mt-1 font-sans text-[11px] text-ash">{formatRelativeTime(createdAt)}</p>
       </div>
 
       {!read && (

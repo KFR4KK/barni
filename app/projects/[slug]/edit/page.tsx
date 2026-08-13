@@ -60,17 +60,17 @@ export default async function EditProjectPage({ params, searchParams }: EditProj
             ProjectGalleryEditor below already shows exactly which images
             made it so they can add the rest. */}
         {galleryError === "1" && (
-          <p className="mb-6 rounded-md border border-brass/40 bg-brass/10 px-4 py-3 font-mono text-xs uppercase tracking-wider text-brass">
+          <p className="mb-6 rounded-md border border-brass/40 bg-brass/10 px-4 py-3 font-sans text-xs uppercase tracking-wider text-brass">
             Проєкт створено, але частину зображень галереї завантажити не вдалося. Додайте їх ще раз нижче.
           </p>
         )}
 
-        <p className="font-mono text-xs uppercase tracking-wider text-brass">Редагування</p>
+        <p className="font-sans text-xs uppercase tracking-wider text-brass">Редагування</p>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
           <h1 className="font-serif text-3xl text-bone md:text-4xl">{project.title}</h1>
           <Link
             href={`/projects/${project.slug}`}
-            className="font-mono text-xs uppercase tracking-wider text-ash underline decoration-transparent underline-offset-4 transition-colors duration-fast hover:text-bone hover:decoration-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+            className="font-sans text-xs uppercase tracking-wider text-ash underline decoration-transparent underline-offset-4 transition-colors duration-fast hover:text-bone hover:decoration-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
           >
             Переглянути проєкт
           </Link>

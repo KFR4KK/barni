@@ -49,8 +49,8 @@ function AccountRow({ account }: { account: PopularAccount }) {
       </div>
       <div className="min-w-0">
         <p className="truncate font-sans text-sm font-medium text-bone">{account.displayName}</p>
-        <p className="truncate font-mono text-[11px] text-ash">@{account.username}</p>
-        <p className="font-mono text-[11px] text-ash/70">{formatFollowers(account.followers)}</p>
+        <p className="truncate font-sans text-[11px] text-ash">@{account.username}</p>
+        <p className="font-sans text-[11px] text-ash/70">{formatFollowers(account.followers)}</p>
       </div>
     </div>
   );

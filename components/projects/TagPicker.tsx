@@ -137,7 +137,7 @@ export function TagPicker({ projectId, selected, onChange, disabled }: TagPicker
             <li
               key={tag.id}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-mono text-xs",
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 font-sans text-xs",
                 tag.isBuiltIn
                   ? "border-line text-bone"
                   : "border-brass/40 bg-brass/5 text-brass"
@@ -183,7 +183,7 @@ export function TagPicker({ projectId, selected, onChange, disabled }: TagPicker
                     >
                       {tag.name}
                       {!tag.isBuiltIn && (
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-brass/80">
+                        <span className="font-sans text-[10px] uppercase tracking-wider text-brass/80">
                           свій
                         </span>
                       )}
@@ -201,7 +201,7 @@ export function TagPicker({ projectId, selected, onChange, disabled }: TagPicker
               <button
                 type="button"
                 onClick={addCustomTag}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-mono text-xs uppercase tracking-wider text-brass transition-colors duration-fast hover:bg-graphite"
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-sans text-xs uppercase tracking-wider text-brass transition-colors duration-fast hover:bg-graphite"
               >
                 + Створити власний тег «{trimmedQuery}»
               </button>
@@ -214,7 +214,7 @@ export function TagPicker({ projectId, selected, onChange, disabled }: TagPicker
         )}
       </div>
 
-      <p className="font-mono text-[10px] text-ash/70">
+      <p className="font-sans text-[10px] text-ash/70">
         {selected.length}/{MAX_TAGS_PER_PROJECT}. Власні теги видно лише на цьому проєкті.
       </p>
     </div>

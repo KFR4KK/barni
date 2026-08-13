@@ -149,7 +149,7 @@ export function PostForm({ redirectTo }: PostFormProps) {
           onChange={(event) => setContent(event.target.value)}
           className={cn(formFieldClasses, "resize-y leading-relaxed")}
         />
-        <p className="font-mono text-[10px] text-ash/70">
+        <p className="font-sans text-[10px] text-ash/70">
           {content.length}/{MAX_POST_CONTENT_LENGTH}
         </p>
       </div>
@@ -192,7 +192,7 @@ export function PostForm({ redirectTo }: PostFormProps) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="inline-flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
+          className="inline-flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2 font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
         >
           {isUploading ? (
             <>
@@ -206,16 +206,16 @@ export function PostForm({ redirectTo }: PostFormProps) {
             </>
           )}
         </button>
-        {uploadError && <p className="font-mono text-[11px] text-brass">{UPLOAD_ERROR_MESSAGE}</p>}
+        {uploadError && <p className="font-sans text-[11px] text-brass">{UPLOAD_ERROR_MESSAGE}</p>}
       </div>
 
-      {error && <p className="font-mono text-xs text-brass">{SAVE_ERROR_MESSAGE}</p>}
+      {error && <p className="font-sans text-xs text-brass">{SAVE_ERROR_MESSAGE}</p>}
 
       <div className="flex items-center gap-4">
         <button
           type="submit"
           disabled={isSubmitting || isUploading || content.trim().length === 0}
-          className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 font-sans text-xs uppercase tracking-wider text-bone transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
         >
           {isSubmitting ? (
             <>

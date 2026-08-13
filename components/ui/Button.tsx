@@ -25,7 +25,7 @@ interface ButtonProps {
 
 export function Button({ href, onClick, children, variant = "text", className }: ButtonProps) {
   const classes = cn(
-    "inline-flex items-center gap-2 font-mono text-sm tracking-wide transition-colors duration-150",
+    "inline-flex items-center gap-2 font-sans text-sm tracking-wide transition-colors duration-150",
     variant === "text" && "text-ash hover:text-bone",
     variant === "outline" &&
       "rounded-md border border-line px-4 py-2 text-bone hover:border-brass",

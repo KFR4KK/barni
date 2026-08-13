@@ -62,7 +62,7 @@ export function DeleteProjectButton({ projectSlug, projectTitle }: DeleteProject
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+        className="inline-flex items-center gap-2 rounded-md border border-line px-5 py-2.5 font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:border-brass hover:text-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
       >
         <Trash2 size={14} />
         Видалити проєкт
@@ -81,14 +81,14 @@ export function DeleteProjectButton({ projectSlug, projectTitle }: DeleteProject
             неможливо скасувати.
           </p>
 
-          {error && <p className="font-mono text-xs text-brass">{DELETE_ERROR_MESSAGE}</p>}
+          {error && <p className="font-sans text-xs text-brass">{DELETE_ERROR_MESSAGE}</p>}
 
           <div className="flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               disabled={isDeleting}
-              className="font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:text-bone disabled:opacity-60"
+              className="font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:text-bone disabled:opacity-60"
             >
               Скасувати
             </button>
@@ -96,7 +96,7 @@ export function DeleteProjectButton({ projectSlug, projectTitle }: DeleteProject
               type="button"
               onClick={handleConfirm}
               disabled={isDeleting}
-              className="inline-flex items-center gap-2 rounded-md border border-brass px-4 py-2 font-mono text-xs uppercase tracking-wider text-brass transition-colors duration-fast hover:bg-brass hover:text-charcoal focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-md border border-brass px-4 py-2 font-sans text-xs uppercase tracking-wider text-brass transition-colors duration-fast hover:bg-brass hover:text-charcoal focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2 disabled:opacity-60"
             >
               {isDeleting ? (
                 <>

@@ -116,7 +116,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
       <Container feedWide>
         <Link
           href="/feed"
-          className="mb-8 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:text-bone"
+          className="mb-8 inline-flex items-center gap-2 font-sans text-xs uppercase tracking-wider text-ash transition-colors duration-fast hover:text-bone"
         >
           <ArrowLeft size={14} aria-hidden="true" />
           Назад
@@ -178,7 +178,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
                   href={project.externalUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-mono text-sm tracking-wide text-bone transition-colors duration-150 hover:border-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
+                  className="inline-flex items-center gap-2 rounded-md border border-line px-4 py-2 font-sans text-sm tracking-wide text-bone transition-colors duration-150 hover:border-brass focus-visible:outline focus-visible:outline-1 focus-visible:outline-brass focus-visible:outline-offset-2"
                 >
                   <Globe className="h-4 w-4" aria-hidden="true" />
                   Visit Website

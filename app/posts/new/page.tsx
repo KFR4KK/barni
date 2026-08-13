@@ -29,7 +29,7 @@ export default async function NewPostPage() {
   return (
     <Container>
       <div className="py-16 md:py-24">
-        <p className="font-mono text-xs uppercase tracking-wider text-brass">Новий пост</p>
+        <p className="font-sans text-xs uppercase tracking-wider text-brass">Новий пост</p>
         <h1 className="mt-2 font-serif text-3xl text-bone md:text-4xl">Опублікувати пост</h1>
         <div className="mt-10 max-w-2xl">
           <PostForm redirectTo={redirectTo} />
