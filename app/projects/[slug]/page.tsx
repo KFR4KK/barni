@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Globe, ArrowLeft } from "lucide-react";
@@ -12,7 +13,7 @@ import { ProjectTagsCard } from "@/components/projects/ProjectTagsCard";
 import { CommentsSection } from "@/components/members/CommentsSection";
 import { LikeButton } from "@/components/projects/LikeButton";
 import { auth } from "@/lib/auth";
-import { getProjectWithAuthor } from "@/lib/projects";
+import { getProjectWithAuthor, incrementProjectViewCount } from "@/lib/projects";
 import { getProfileByUserId } from "@/lib/profiles";
 import { getProjectComments } from "@/lib/project-comments";
 import { getLikesCount, hasUserLiked } from "@/lib/project-likes";
@@ -58,6 +59,17 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   // actually do anything.
   if (project.visibility === "PRIVATE" && !isOwner) {
     notFound();
+  }
+
+  // Projects Gallery redesign — view count. Skips the owner's own visits
+  // (checking your own project shouldn't inflate its stats) and runs via
+  // `after()`, not a bare unawaited promise: on a serverless platform
+  // like Vercel the function can freeze right after the response is
+  // sent, which would silently drop a fire-and-forget write that hadn't
+  // finished yet — `after()` is Next's actual guarantee for "run this,
+  // but don't make the response wait for it".
+  if (!isOwner) {
+    after(() => incrementProjectViewCount(project.id));
   }
 
   // Phase 8.1 — Project Comments. Same "claimed-nothing-required" shape

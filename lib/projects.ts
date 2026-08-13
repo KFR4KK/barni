@@ -2,6 +2,7 @@ import { Prisma, ProjectVisibility } from "@prisma/client";
 import type { Project, ProjectImage } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { slugify } from "@/lib/utils";
+import { getTagsForProjects, type TagOption } from "@/lib/tags";
 
 // Phase 6.1 — Projects Foundation. Same role as lib/profiles.ts and
 // lib/follows.ts: the one place that talks to the Project table, so
@@ -114,6 +115,136 @@ export async function getPublicProjects(): Promise<ProjectListItem[]> {
     },
   });
   return rows.map(toProjectListItem);
+}
+
+// Projects Gallery (Pinterest × Dribbble redesign) — everything below is
+// new for that page; nothing above this point changed.
+//
+// Consolidated the brief's six filter labels (All/Recent/Popular/Most
+// liked/Most viewed/Trending) down to four real, non-overlapping sorts:
+// "All" and "Recent" were both literally "newest first" with no
+// distinct behavior, and "Popular" had no clear difference from
+// "Trending" other than a name — two pairs of duplicate options a
+// visitor would have no real reason to pick between. `recent` **is**
+// the "All" tab (default, no popularity weighting at all); `trending`
+// covers what "Popular" would have meant. Easy to split back out later
+// if real usage shows people want the distinction.
+export type ProjectGallerySort = "recent" | "mostLiked" | "mostViewed" | "trending";
+
+export type ProjectGalleryItem = ProjectListItem & {
+  commentsCount: number;
+  tags: TagOption[];
+};
+
+const GALLERY_PAGE_SIZE = 36;
+// "Trending" = most-liked among recently-created projects — a simple,
+// DB-native approximation (one extra `where` clause, no raw SQL, no
+// decay-function scoring) rather than a real time-decayed trending
+// algorithm. Good enough for the size this platform is at; revisit with
+// a proper scoring query if the catalog gets large enough for "recent"
+// to stop being a meaningful proxy for "currently relevant".
+const TRENDING_WINDOW_DAYS = 14;
+
+export interface ProjectGalleryPageOptions {
+  /** 0-indexed page number, for offset pagination (`page * GALLERY_PAGE_SIZE`
+   * rows are skipped). Offset rather than cursor-based — simpler, and at
+   * this platform's scale the "a new project pushed everything down one
+   * row between page loads" edge case a cursor avoids isn't worth the
+   * extra complexity yet. */
+  page?: number;
+  sort?: ProjectGallerySort;
+  /** Matches project title, author username/display name, or attached
+   * tag names — see the `OR` clause below. */
+  search?: string;
+}
+
+export interface ProjectGalleryPage {
+  items: ProjectGalleryItem[];
+  /** True if another page exists — drives the infinite-scroll sentinel
+   * (components/projects/gallery/useInfiniteProjects.ts) rather than the
+   * client guessing from `items.length === GALLERY_PAGE_SIZE`, which
+   * breaks if the last page happens to be exactly full. */
+  hasMore: boolean;
+}
+
+function galleryOrderBy(sort: ProjectGallerySort): Prisma.ProjectOrderByWithRelationInput {
+  switch (sort) {
+    case "mostLiked":
+    case "trending":
+      return { likes: { _count: "desc" } };
+    case "mostViewed":
+      return { viewCount: "desc" };
+    case "recent":
+    default:
+      return { createdAt: "desc" };
+  }
+}
+
+export async function getProjectsGalleryPage(
+  options: ProjectGalleryPageOptions = {}
+): Promise<ProjectGalleryPage> {
+  const page = options.page ?? 0;
+  const sort = options.sort ?? "recent";
+  const search = options.search?.trim();
+
+  const where: Prisma.ProjectWhereInput = {
+    visibility: ProjectVisibility.PUBLIC,
+    ...(sort === "trending"
+      ? { createdAt: { gte: new Date(Date.now() - TRENDING_WINDOW_DAYS * 24 * 60 * 60 * 1000) } }
+      : {}),
+    ...(search
+      ? {
+          OR: [
+            { title: { contains: search, mode: Prisma.QueryMode.insensitive } },
+            { author: { username: { contains: search, mode: Prisma.QueryMode.insensitive } } },
+            { author: { displayName: { contains: search, mode: Prisma.QueryMode.insensitive } } },
+            { tags: { some: { tag: { name: { contains: search, mode: Prisma.QueryMode.insensitive } } } } },
+          ],
+        }
+      : {}),
+  };
+
+  // Fetch one extra row to know whether another page exists without a
+  // separate count() query — cheaper than counting the whole matching
+  // set just to answer a yes/no question.
+  const rows = await prisma.project.findMany({
+    where,
+    orderBy: galleryOrderBy(sort),
+    skip: page * GALLERY_PAGE_SIZE,
+    take: GALLERY_PAGE_SIZE + 1,
+    include: {
+      author: { select: { username: true, displayName: true } },
+      _count: { select: { likes: true, comments: true } },
+    },
+  });
+
+  const hasMore = rows.length > GALLERY_PAGE_SIZE;
+  const pageRows = hasMore ? rows.slice(0, GALLERY_PAGE_SIZE) : rows;
+
+  const tagsByProject = await getTagsForProjects(pageRows.map((row) => row.id));
+
+  const items = pageRows.map((row) => {
+    const { _count, ...rest } = row;
+    return {
+      ...rest,
+      likesCount: _count.likes,
+      commentsCount: _count.comments,
+      tags: tagsByProject.get(row.id) ?? [],
+    };
+  });
+
+  return { items, hasMore };
+}
+
+// Fire-and-forget from the project detail page (app/projects/[slug]/page.tsx)
+// — a plain increment, not awaited before the page renders, so a slow
+// write never delays showing the project itself. See the schema
+// comment on Project.viewCount for why this isn't deduped per viewer.
+export async function incrementProjectViewCount(projectId: string): Promise<void> {
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { viewCount: { increment: 1 } },
+  });
 }
 
 const MAX_SLUG_ATTEMPTS = 25;

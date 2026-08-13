@@ -451,6 +451,17 @@ model Project {
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
 
+  // Projects Gallery (Pinterest × Dribbble redesign). Plain incrementing
+  // counter, not a per-viewer ProjectView table — no dedup by
+  // session/user, same "simple counter, not a full analytics system"
+  // tradeoff ProjectLike deliberately avoids for likes (that one IS
+  // deduped, since a like is a meaningful claim "this user liked this",
+  // while a view is just traffic volume). Incremented by
+  // lib/projects.ts's incrementProjectViewCount, fire-and-forget from
+  // the project detail page (app/projects/[slug]/page.tsx) so a slow
+  // write never blocks the page render.
+  viewCount Int @default(0)
+
   // Phase 6.2 — Project Showcase. All three optional, additive to Phase
   // 6.1's shape — no existing column is touched. `shortDescription` is
   // capped at 200 chars at the application layer (see

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { createProject } from "@/lib/projects";
+import { createProject, getProjectsGalleryPage, type ProjectGallerySort } from "@/lib/projects";
 import { isValidGithubUrl, isValidHttpUrl } from "@/lib/utils";
 import { createCustomTag, replaceProjectTags, MAX_CUSTOM_TAG_LENGTH, MAX_TAGS_PER_PROJECT } from "@/lib/tags";
 
@@ -100,6 +100,32 @@ function readCreateInput(body: unknown): CreateBody | null {
     tagIds: cleanTagIds,
     customTagNames: cleanCustomTagNames,
   };
+}
+
+const VALID_SORTS: ProjectGallerySort[] = ["recent", "mostLiked", "mostViewed", "trending"];
+
+// Projects Gallery — GET on the same route the create form's POST
+// already lives on, same REST-collection convention ("GET lists, POST
+// creates") the rest of this app's routes follow. Public, no auth check
+// (matches getPublicProjects/getProjectsGalleryPage's own PUBLIC-only
+// filter — nothing here can leak a PRIVATE project to a visitor who
+// isn't its owner, since the gallery never passes includePrivate the
+// way the profile page's own project list does).
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+
+  const pageParam = Number.parseInt(searchParams.get("page") ?? "0", 10);
+  const page = Number.isFinite(pageParam) && pageParam >= 0 ? pageParam : 0;
+
+  const sortParam = searchParams.get("sort");
+  const sort = VALID_SORTS.includes(sortParam as ProjectGallerySort)
+    ? (sortParam as ProjectGallerySort)
+    : "recent";
+
+  const search = searchParams.get("q") ?? undefined;
+
+  const result = await getProjectsGalleryPage({ page, sort, search });
+  return NextResponse.json(result);
 }
 
 export async function POST(request: Request) {

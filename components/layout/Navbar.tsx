@@ -16,6 +16,7 @@ export async function Navbar() {
           </Link>
           <div className="flex items-center gap-5 sm:gap-6">
             <NavLink href="/feed" label="Feed" />
+            <NavLink href="/projects" label="Projects" />
             <AuthNav />
           </div>
         </nav>
