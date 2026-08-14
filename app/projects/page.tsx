@@ -18,15 +18,6 @@ export default async function ProjectsPage() {
   return (
     <Section compact>
       <Container feedWide>
-        <div className="mb-10 flex flex-col gap-2">
-          <h1 className="font-display text-3xl font-normal lowercase text-bone sm:text-4xl">
-            проєкти
-          </h1>
-          <p className="font-sans text-sm text-ash">
-            Роботи спільноти .vibe — гортай, шукай натхнення, знаходь авторів.
-          </p>
-        </div>
-
         <ProjectsGalleryClient
           initialProjects={items.map((item) => ({
             ...item,
