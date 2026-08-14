@@ -43,6 +43,9 @@ interface PostCardProps {
   comments?: PostCommentWithAuthor[];
   viewer?: { id: string } | null;
   variant?: "default" | "feed";
+  /** Updates page — no report feature there per that page's brief.
+   * Defaults to true (every existing "feed" caller keeps showing it). */
+  allowReport?: boolean;
 }
 
 // Phase 8.0 — Posts Foundation, redesigned for the Feed in Phase 9.3 and
@@ -57,7 +60,7 @@ interface PostCardProps {
 // labels), and a real Like toggle against PostLike (see
 // lib/post-likes.ts) — the old "feed" variant had no like feature at
 // all, since PostLike didn't exist yet.
-export function PostCard({ post, comments, viewer, variant = "default" }: PostCardProps) {
+export function PostCard({ post, comments, viewer, variant = "default", allowReport = true }: PostCardProps) {
   const { author } = post;
   const isFeed = variant === "feed";
   const router = useRouter();
@@ -269,44 +272,48 @@ export function PostCard({ post, comments, viewer, variant = "default" }: PostCa
 
         <span className="shrink-0 font-sans text-xs text-ash">{formatRelativeTime(post.createdAt)}</span>
 
-        <div ref={menuRef} className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            aria-label="Більше дій"
-            aria-expanded={menuOpen}
+        {(isOwner || allowReport) && (
+          <div ref={menuRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              aria-label="Більше дій"
+              aria-expanded={menuOpen}
             className="-mr-1.5 -mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
           >
             <MoreHorizontal size={17} aria-hidden="true" />
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-line bg-charcoal py-1 shadow-card">
-              {isOwner ? (
-                <button
-                  type="button"
-                  disabled={isDeleting}
-                  onClick={() => {
-                    setMenuOpen(false);
-                    handleDelete();
-                  }}
-                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-sans text-sm text-brass transition-colors duration-fast hover:bg-graphite disabled:opacity-60"
-                >
-                  <Trash2 size={14} aria-hidden="true" />
-                  {isDeleting ? "Видалення…" : "Видалити"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-sans text-sm text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
-                >
-                  <Flag size={14} aria-hidden="true" />
-                  Поскаржитись
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-line bg-charcoal py-1 shadow-card">
+                {isOwner ? (
+                  <button
+                    type="button"
+                    disabled={isDeleting}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleDelete();
+                    }}
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-sans text-sm text-brass transition-colors duration-fast hover:bg-graphite disabled:opacity-60"
+                  >
+                    <Trash2 size={14} aria-hidden="true" />
+                    {isDeleting ? "Видалення…" : "Видалити"}
+                  </button>
+                ) : (
+                  allowReport && (
+                    <button
+                      type="button"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-sans text-sm text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
+                    >
+                      <Flag size={14} aria-hidden="true" />
+                      Поскаржитись
+                    </button>
+                  )
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <p className="whitespace-pre-wrap text-sm leading-relaxed text-bone/90">{post.content}</p>
@@ -385,14 +392,16 @@ export function PostCard({ post, comments, viewer, variant = "default" }: PostCa
                 <Link2 size={14} aria-hidden="true" />
                 {copyFeedback ? "Скопійовано!" : "Скопіювати посилання"}
               </button>
-              <button
-                type="button"
-                onClick={() => setSharePopoverOpen(false)}
-                className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-sans text-sm text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
-              >
-                <Flag size={14} aria-hidden="true" />
-                Поскаржитись
-              </button>
+              {allowReport && (
+                <button
+                  type="button"
+                  onClick={() => setSharePopoverOpen(false)}
+                  className="flex w-full items-center gap-2 px-4 py-2.5 text-left font-sans text-sm text-ash transition-colors duration-fast hover:bg-graphite hover:text-bone"
+                >
+                  <Flag size={14} aria-hidden="true" />
+                  Поскаржитись
+                </button>
+              )}
             </div>
           )}
         </div>

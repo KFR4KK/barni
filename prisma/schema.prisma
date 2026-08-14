@@ -899,6 +899,17 @@ model Post {
   // redesign of this model.
   imageUrl String?
 
+  // Updates page (Dev Blog / Changelog) — a Post authored by the admin
+  // through /updates instead of the regular Feed composer. Same Post
+  // model, same PostCard rendering, same likes/comments/views — the
+  // brief is explicit that an update should "look exactly like a normal
+  // Feed post" — this one boolean is the only thing that makes it not
+  // show up in the regular Feed (see lib/posts.ts's getAllPosts) and
+  // instead only on /updates (see getUpdatePosts). Enforced server-side
+  // only for an admin account (see lib/admin.ts) — never trusted from
+  // the request body alone.
+  isUpdate Boolean @default(false)
+
   // Author. Cascade: same reasoning as every other User-owned row in
   // this schema (Follow, Project, ProjectComment, ProjectLike,
   // Notification) — no orphaned posts left behind by a deleted account.
@@ -911,6 +922,9 @@ model Post {
   // query would just drop the `userId` filter and lean on `createdAt`
   // alone, still served by the same index's second column.
   @@index([userId, createdAt])
+  // Updates page — covers both getAllPosts's `isUpdate: false` and
+  // getUpdatePosts's `isUpdate: true`, each ordered by createdAt.
+  @@index([isUpdate, createdAt])
 
   // Phase 8.1 — Post Comments. Plain reverse relation, same shape as
   // Project's own `comments ProjectComment[]` — see PostComment's own

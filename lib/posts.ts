@@ -100,6 +100,21 @@ export async function getPostsByUserId(userId: string, viewerId: string | null =
 // the same way app/members/[slug]/page.tsx calls getPostsByUserId.
 export async function getAllPosts(viewerId: string | null = null): Promise<PostWithAuthor[]> {
   const rows = await prisma.post.findMany({
+    where: { isUpdate: false },
+    orderBy: { createdAt: "desc" },
+    include: POST_LIST_INCLUDE,
+  });
+  return toPostsWithAuthor(rows, viewerId);
+}
+
+// Updates page (Dev Blog / Changelog) — the mirror image of getAllPosts
+// above: same query shape, `isUpdate: true` instead of `false`. Kept as
+// its own function (not a parameter on getAllPosts) since the two pages
+// calling these are conceptually different feeds, not one feed with a
+// filter toggle.
+export async function getUpdatePosts(viewerId: string | null = null): Promise<PostWithAuthor[]> {
+  const rows = await prisma.post.findMany({
+    where: { isUpdate: true },
     orderBy: { createdAt: "desc" },
     include: POST_LIST_INCLUDE,
   });
@@ -109,11 +124,15 @@ export async function getAllPosts(viewerId: string | null = null): Promise<PostW
 export interface CreatePostInput {
   content: string;
   imageUrl: string | null;
+  /** Updates page only — see Post.isUpdate's schema comment. Defaults to
+   * false so every existing caller (the regular Feed composer) is
+   * unaffected. */
+  isUpdate?: boolean;
 }
 
 export function createPost(userId: string, input: CreatePostInput): Promise<Post> {
   return prisma.post.create({
-    data: { userId, content: input.content, imageUrl: input.imageUrl },
+    data: { userId, content: input.content, imageUrl: input.imageUrl, isUpdate: input.isUpdate ?? false },
   });
 }
 

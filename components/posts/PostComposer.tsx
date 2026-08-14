@@ -28,6 +28,11 @@ interface PostComposerProps {
   redirectTo?: string;
   /** "feed" — pill-shaped collapsed bar for the Feed page layout. */
   variant?: "default" | "feed";
+  /** Updates page only — sends `isUpdate: true` with the create request.
+   * The API route (app/api/posts/route.ts) re-verifies the poster is
+   * actually the admin before honoring this — this flag alone can't make
+   * a non-admin's post show up on /updates. */
+  postAsUpdate?: boolean;
   className?: string;
 }
 
@@ -36,6 +41,7 @@ const UPLOAD_ERROR_MESSAGE = "Не вдалося завантажити зоб�
 const UPLOAD_FOLDER = "posts/images";
 const COMPOSER_PLACEHOLDER = "Поділіться новинами, покажіть роботу або поставте питання...";
 const FEED_COMPOSER_PLACEHOLDER = "Поділіться новинами";
+const UPDATE_COMPOSER_PLACEHOLDER = "Напишіть про нове оновлення...";
 
 // Textarea auto-grow bounds. min-h-[1 line], max-h-[~10 lines] — the
 // brief's own numbers. Measured against this field's actual classes
@@ -60,11 +66,16 @@ export function PostComposer({
   displayName,
   redirectTo,
   variant = "default",
+  postAsUpdate = false,
   className,
 }: PostComposerProps) {
   const router = useRouter();
   const isFeed = variant === "feed";
-  const placeholder = isFeed ? FEED_COMPOSER_PLACEHOLDER : COMPOSER_PLACEHOLDER;
+  const placeholder = postAsUpdate
+    ? UPDATE_COMPOSER_PLACEHOLDER
+    : isFeed
+      ? FEED_COMPOSER_PLACEHOLDER
+      : COMPOSER_PLACEHOLDER;
 
   const [expanded, setExpanded] = useState(false);
   const [content, setContent] = useState("");
@@ -171,7 +182,7 @@ export function PostComposer({
       const response = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, imageUrl: imageUrl || null }),
+        body: JSON.stringify({ content, imageUrl: imageUrl || null, isUpdate: postAsUpdate }),
       });
       if (!response.ok) {
         throw new Error(`Request failed: ${response.status}`);
