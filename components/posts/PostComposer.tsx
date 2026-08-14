@@ -7,6 +7,7 @@ import Image from "next/image";
 import { ImageIcon, Loader2, Smile, UserRound, X } from "lucide-react";
 import { cn, isExternalUrl } from "@/lib/utils";
 import { MAX_POST_CONTENT_LENGTH } from "@/lib/posts";
+import { Modal } from "@/components/ui/Modal";
 
 interface PostComposerProps {
   /** The signed-in viewer's own avatar/name — shown in the collapsed row
@@ -19,7 +20,7 @@ interface PostComposerProps {
    * current caller (Feed, Profile) — both keep the visitor on the same
    * page and just refresh it, the same `router.refresh()` PostForm
    * already relied on, so the new post reappears via the page's own
-   * existing fetch (getFeed()/getPostsByUserId()) rather than a
+   * existing fetch (getAllPosts()/getPostsByUserId()) rather than a
    * client-side splice. Kept optional, not removed, so a future page
    * that *does* want to land somewhere else after publishing (the way
    * the old standalone /posts/new page did) can still pass it in without
@@ -50,8 +51,8 @@ const TEXTAREA_MAX_HEIGHT = 248;
 // is still exactly `POST /api/posts` plus the existing `/api/uploads`
 // upload endpoint (see PostForm.tsx's own comment for why that upload
 // works the way it does; unchanged here, copied verbatim). What's new is
-// purely presentational: a one-line collapsed bar that expands in place
-// instead of navigating to a dedicated page. PostForm itself is left
+// purely presentational: a one-line collapsed bar that opens the actual
+// compose form in a Modal instead of navigating to a dedicated page. PostForm itself is left
 // alone for /posts/new's backward-compat page — this isn't a refactor of
 // that component, it's a sibling that happens to share its submit logic.
 export function PostComposer({
@@ -79,22 +80,6 @@ export function PostComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const hasDraft = content.trim().length > 0 || Boolean(imageUrl);
-
-  // Click outside collapses the composer — but only an empty one. Same
-  // mousedown-listener pattern components/auth/UserMenu.tsx already uses
-  // for its dropdown, reused rather than reinvented.
-  useEffect(() => {
-    if (!expanded) return;
-
-    function handlePointerDown(event: MouseEvent) {
-      if (hasDraft) return;
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setExpanded(false);
-      }
-    }
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [expanded, hasDraft]);
 
   // Auto-grow the textarea between 1 and ~10 lines, no manual resize
   // handle — reset to "auto" first so shrinking (e.g. after deleting a
@@ -199,7 +184,7 @@ export function PostComposer({
         router.push(redirectTo);
       }
       // Same as PostForm's post-publish refresh: re-run the current
-      // page's server fetch (getFeed() / getPostsByUserId(), depending
+      // page's server fetch (getAllPosts() / getPostsByUserId(), depending
       // on which page rendered this composer) so the new post shows up
       // without a full reload.
       router.refresh();
@@ -233,30 +218,28 @@ export function PostComposer({
       ref={containerRef}
       className={cn(
         "border border-line/50 bg-charcoal/20 transition-colors duration-base",
-        isFeed ? "rounded-[20px] shadow-card" : "rounded-card border-line/60 bg-charcoal/30",
-        expanded && "border-line",
+        isFeed ? "rounded-full shadow-card" : "rounded-card border-line/60 bg-charcoal/30",
         className
       )}
     >
-      {/* Collapsed state: a single compact row, styled like the rest of
-         the composer rather than a separate form — clicking it (not a
-         navigation Link anymore) expands in place. */}
-      {!expanded && (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className={cn(
-            "flex w-full items-center gap-3 text-left transition-colors duration-fast hover:bg-charcoal/50",
-            isFeed ? "rounded-[20px] px-5 py-4" : "rounded-card px-4 py-3"
-          )}
-        >
-          {avatar}
-          <span className="truncate font-sans text-sm text-ash/70">{placeholder}</span>
-        </button>
-      )}
+      {/* The composer is always just this one collapsed row — clicking it
+         opens the actual compose form in a Modal (below) rather than
+         expanding in place, per the brief's "при клике должно открываться
+         окно создания публикации". */}
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className={cn(
+          "flex w-full items-center gap-3 text-left transition-colors duration-fast hover:bg-charcoal/50",
+          isFeed ? "rounded-full px-5 py-3.5" : "rounded-card px-4 py-3"
+        )}
+      >
+        {avatar}
+        <span className="truncate font-sans text-sm text-ash/70">{placeholder}</span>
+      </button>
 
-      {expanded && (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 transition-[opacity] duration-base">
+      <Modal isOpen={expanded} onClose={handleCancel} title="Новий пост">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex items-start gap-3">
             {avatar}
             <textarea
@@ -274,10 +257,6 @@ export function PostComposer({
             />
           </div>
 
-          {/* Preview fades/grows in the same way PostForm's did — same
-             markup, just without the "Зображення" label since this
-             composer has no other field it needs to be distinguished
-             from. */}
           {imageUrl && (
             <div className="relative aspect-[16/10] w-full max-w-sm overflow-hidden rounded-md border border-line/60 bg-graphite transition-opacity duration-base">
               <Image
@@ -324,8 +303,6 @@ export function PostComposer({
                 {imageUrl ? "Змінити фото" : "Додати фото"}
               </button>
 
-              {/* Reserved for future reactions/emoji — intentionally
-                 disabled, per the brief, rather than left out entirely. */}
               <button
                 type="button"
                 disabled
@@ -366,7 +343,7 @@ export function PostComposer({
 
           {error && <p className="font-sans text-xs text-brass">{SAVE_ERROR_MESSAGE}</p>}
         </form>
-      )}
+      </Modal>
     </div>
   );
 }

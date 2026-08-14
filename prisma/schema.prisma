@@ -143,6 +143,10 @@ model User {
   // shape as `projectLikes` above.
   profileCommentLikes ProfileCommentLike[]
 
+  // Feed redesign. Same role as `projectLikes` above, for Post instead
+  // of Project.
+  postLikes PostLike[]
+
   // Future phases attach here without touching any existing column:
   // roles     UserRole[]
   // reports   Report[]
@@ -754,6 +758,24 @@ model ProjectLike {
   @@index([userId])
 }
 
+// Feed redesign. Same shape and same reasoning as ProjectLike above,
+// for a Post instead of a Project — see that model's own comments for
+// the full explanation of each index/constraint, not repeated here.
+model PostLike {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
 // Phase 7.4 — Notifications Foundation.
 //
 // One table for every kind of notification, discriminated by `type`,
@@ -789,6 +811,9 @@ enum NotificationType {
   POST_COMMENT
   COMMENT_REPLY
   PROJECT_LIKE
+  // Feed redesign — same role as PROJECT_LIKE, for a Post instead of a
+  // Project.
+  POST_LIKE
 }
 
 model Notification {
@@ -856,6 +881,15 @@ model Post {
 
   content String @db.Text
 
+  // Feed redesign — same role and same "plain counter, no per-viewer
+  // dedup" tradeoff as Project.viewCount (see that field's own comment
+  // for the full reasoning). Incremented via lib/posts.ts's
+  // incrementPostViewCount, fired once per card from the client as it
+  // scrolls into view in the Feed (see components/posts/PostCard.tsx) —
+  // posts have no dedicated detail page to increment on visiting, the
+  // way a Project does.
+  viewCount Int @default(0)
+
   // Exactly one optional image, stored the same way as Project.coverImage
   // — just the public Storage URL, never a relation to a ProjectImage-
   // style side table, since a Post only ever has the one (brief: "не
@@ -883,6 +917,9 @@ model Post {
   // comment for why this is its own model rather than reusing
   // ProjectComment.
   comments PostComment[]
+
+  // Feed redesign. Same role as Project's own `likes ProjectLike[]`.
+  likes PostLike[]
 }
 
 // Phase 8.1 — Post Comments.

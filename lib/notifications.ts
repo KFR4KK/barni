@@ -195,6 +195,22 @@ async function resolveNotificationDetails(
         href: project ? `/projects/${project.slug}` : null,
       };
     }
+
+    case "POST_LIKE": {
+      // No dedicated post detail page to link to (unlike a Project) —
+      // the post's author's own profile (where PostsSection renders it)
+      // is the closest real destination.
+      if (!entityId) return { message: `${actorName} вподобав ваш пост`, href: null };
+      const post = await prisma.post.findUnique({
+        where: { id: entityId },
+        select: { user: { select: { username: true } } },
+      });
+      const username = post?.user.username ?? null;
+      return {
+        message: `${actorName} вподобав ваш пост`,
+        href: username ? buildProfileURL(username) : null,
+      };
+    }
   }
 }
 

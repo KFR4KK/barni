@@ -107,7 +107,7 @@ export default async function MemberPage({ params }: MemberPageProps) {
   // Phase 8.0 — Posts Foundation. Same "claimed profile only" rule as
   // Projects above — Post.userId is a User.id, and an unclaimed Profile
   // has none.
-  const posts = profile?.userId ? await getPostsByUserId(profile.userId) : [];
+  const posts = profile?.userId ? await getPostsByUserId(profile.userId, session?.user?.id ?? null) : [];
 
   // Phase 8.1 — Post Comments. One getPostComments call per post, run
   // together rather than sequentially — same "compose in the page, not
